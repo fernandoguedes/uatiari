@@ -95,3 +95,7 @@ def create_workflow() -> StateGraph:
 
     # Compile and return
     return workflow.compile()
+
+
+# Expose the compiled graph for LangGraph Studio
+graph = create_workflow()

@@ -57,6 +57,31 @@ poetry run uatiari feature/user-authentication
 poetry run uatiari feature/new-api --base=develop
 ```
 
+### 🖥️ Visual Interface
+
+uatiari supports **LangGraph Studio**, a visual environment to inspect and interact with the review workflow.
+
+1. **Install dependencies:**
+   ```bash
+   poetry install
+   ```
+
+2. **Start the studio server:**
+   ```bash
+   poetry run langgraph dev
+   ```
+
+3. **Open in browser:**
+   The studio will be available at `http://localhost:2024` (or similar).
+
+   > **Note:** When using the studio, you need to provide the initial state manually in the UI:
+   > ```json
+   > {
+   >   "branch_name": "feature/your-branch",
+   >   "base_branch": "main"
+   > }
+   > ```
+
 ---
 
 ## 📊 Example Session
