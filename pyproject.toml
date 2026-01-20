@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "uatiari"
+version = "0.1.0"
+description = "XP-based code review agent"
+authors = ["Felipe Guedes"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langgraph = "^0.2.45"
+langchain-google-genai = "^2.0.5"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.0.0"
+ruff = "^0.1.0"
+
+[tool.poetry.scripts]
+uatiari = "src.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

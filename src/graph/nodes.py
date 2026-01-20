@@ -1,0 +1,203 @@
+"""LangGraph workflow nodes for code review process."""
+
+import json
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from src.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from src.graph.state import ReviewState
+from src.tools.git_tools import get_diff, get_changed_files, GitError
+from src.prompts.xp_reviewer import XP_SYSTEM_PROMPT, PLAN_GENERATION_PROMPT
+from src.logger import print_step, print_review_plan, print_review_result, print_error, ask_approval
+
+
+def fetch_git_context(state: ReviewState) -> ReviewState:
+    """
+    Fetch git diff and changed files for the specified branch.
+    
+    Args:
+        state: Current workflow state
+        
+    Returns:
+        Updated state with diff_content and changed_files
+    """
+    print_step("Fetching git context...", "loading")
+    
+    try:
+        branch = state["branch_name"]
+        base = state["base_branch"]
+        
+        # Get diff and changed files
+        diff_content = get_diff(branch, base)
+        changed_files = get_changed_files(branch, base)
+        
+        print_step(f"Found {len(changed_files)} changed file(s)", "success")
+        
+        return {
+            **state,
+            "diff_content": diff_content,
+            "changed_files": changed_files,
+            "error": None
+        }
+    except GitError as e:
+        print_error(f"Git error: {e}")
+        return {
+            **state,
+            "error": str(e)
+        }
+    except Exception as e:
+        print_error(f"Unexpected error: {e}")
+        return {
+            **state,
+            "error": f"Unexpected error: {e}"
+        }
+
+
+def generate_plan(state: ReviewState) -> ReviewState:
+    """
+    Generate a review plan using LLM analysis of the diff.
+    
+    Args:
+        state: Current workflow state
+        
+    Returns:
+        Updated state with review_plan
+    """
+    print_step("Generating review plan...", "loading")
+    
+    try:
+        # Initialize LLM
+        llm = ChatGoogleGenerativeAI(
+            model=LLM_MODEL,
+            temperature=LLM_TEMPERATURE,
+            google_api_key=GOOGLE_API_KEY
+        )
+        
+        # Prepare prompt
+        changed_files_str = "\n".join(f"  - {f}" for f in state["changed_files"])
+        diff_preview = state["diff_content"][:500]
+        
+        prompt = PLAN_GENERATION_PROMPT.format(
+            changed_files=changed_files_str,
+            diff_preview=diff_preview
+        )
+        
+        # Get plan from LLM
+        response = llm.invoke(prompt)
+        plan = response.content
+        
+        return {
+            **state,
+            "review_plan": plan,
+            "error": None
+        }
+    except Exception as e:
+        print_error(f"Failed to generate plan: {e}")
+        return {
+            **state,
+            "error": f"Failed to generate plan: {e}"
+        }
+
+
+def await_approval(state: ReviewState) -> ReviewState:
+    """
+    Display review plan and wait for user approval.
+    
+    Args:
+        state: Current workflow state
+        
+    Returns:
+        Updated state with user_approved boolean
+    """
+    print_review_plan(state["review_plan"])
+    
+    # Get user input with styled prompt
+    approved = ask_approval()
+    
+    return {
+        **state,
+        "user_approved": approved
+    }
+
+
+def execute_review(state: ReviewState) -> ReviewState:
+    """
+    Execute XP-based code review using LLM.
+    
+    Args:
+        state: Current workflow state
+        
+    Returns:
+        Updated state with review_result
+    """
+    print_step("Executing XP review...", "loading")
+    
+    try:
+        # Initialize LLM
+        llm = ChatGoogleGenerativeAI(
+            model=LLM_MODEL,
+            temperature=LLM_TEMPERATURE,
+            google_api_key=GOOGLE_API_KEY
+        )
+        
+        # Create messages for the review
+        messages = [
+            ("system", XP_SYSTEM_PROMPT),
+            ("human", f"Review this git diff:\n\n{state['diff_content']}")
+        ]
+        
+        # Get review from LLM
+        response = llm.invoke(messages)
+        
+        # Parse JSON response
+        try:
+            # Try to extract JSON from response (in case it's wrapped in markdown)
+            content = response.content.strip()
+            
+            # Remove markdown code blocks if present
+            if content.startswith("```"):
+                # Find the actual JSON content
+                lines = content.split("\n")
+                json_lines = []
+                in_json = False
+                for line in lines:
+                    if line.startswith("```"):
+                        in_json = not in_json
+                        continue
+                    if in_json or (not line.startswith("```")):
+                        json_lines.append(line)
+                content = "\n".join(json_lines).strip()
+            
+            review_result = json.loads(content)
+        except json.JSONDecodeError as e:
+            print_step(f"Warning: LLM returned invalid JSON", "warning")
+            review_result = {
+                "error": "Invalid JSON response from LLM",
+                "raw_response": response.content
+            }
+        
+        return {
+            **state,
+            "review_result": review_result,
+            "error": None
+        }
+    except Exception as e:
+        print_error(f"Failed to execute review: {e}")
+        return {
+            **state,
+            "error": f"Failed to execute review: {e}"
+        }
+
+
+def generate_report(state: ReviewState) -> ReviewState:
+    """
+    Format and display the final review report.
+    
+    Args:
+        state: Current workflow state
+        
+    Returns:
+        State unchanged (terminal node)
+    """
+    print_review_result(state["review_result"])
+    
+    return state
