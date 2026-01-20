@@ -2,14 +2,16 @@
 name = "uatiari"
 version = "0.1.0"
 description = "XP-based code review agent"
-authors = ["Felipe Guedes"]
+authors = ["Luís Fernando Guedes"]
 readme = "README.md"
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 langgraph = "^0.2.45"
 langchain-google-genai = "^2.0.5"
 python-dotenv = "^1.0.0"
+rich = "^14.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

@@ -1,8 +1,55 @@
 """CLI entry point for uatiari code review agent."""
-
 import sys
 from src.graph.workflow import create_workflow
 from src.logger import print_header, print_error, console
+
+
+def print_help():
+    """Display help message."""
+    help_text = """
+[bold cyan]╭──────────────────────────────────────────────────────────────╮[/bold cyan]
+[bold cyan]│[/bold cyan]                                                              [bold cyan]│[/bold cyan]
+[bold cyan]│[/bold cyan]  [bold white]🎯 uatiari - XP Code Reviewer[/bold white]                               [bold cyan]│[/bold cyan]
+[bold cyan]│[/bold cyan]  [dim]"to guide" in Nheengatu[/dim]                                     [bold cyan]│[/bold cyan]
+[bold cyan]│[/bold cyan]                                                              [bold cyan]│[/bold cyan]
+[bold cyan]╰──────────────────────────────────────────────────────────────╯[/bold cyan]
+
+[bold]USAGE:[/bold]
+  [cyan]uatiari[/cyan] <branch-name> [options]
+
+[bold]ARGUMENTS:[/bold]
+  [yellow]<branch-name>[/yellow]    Branch to review against base (required)
+
+[bold]OPTIONS:[/bold]
+  [green]--base=<branch>[/green]   Base branch for comparison (default: main)
+  [green]--help, -h[/green]        Show this help message
+
+[bold]EXAMPLES:[/bold]
+  [dim]# Review feature branch against main[/dim]
+  [cyan]uatiari feature/user-authentication[/cyan]
+
+  [dim]# Review against develop branch[/dim]
+  [cyan]uatiari feature/new-api --base=develop[/cyan]
+
+  [dim]# Get help[/dim]
+  [cyan]uatiari --help[/cyan]
+
+[bold]WORKFLOW:[/bold]
+  1. 📊 Fetches git diff between branches
+  2. 📋 Generates review plan (files, XP checks, time estimate)
+  3. ✋ Asks for human approval
+  4. 🚀 Executes XP-based code review
+  5. ✅ Outputs structured JSON report
+
+[bold]XP PRINCIPLES ENFORCED:[/bold]
+  • [green]TDD[/green] - Production code needs tests
+  • [green]Simple Design[/green] - Flags unnecessary complexity
+  • [green]Refactoring[/green] - Suggests small, safe improvements
+  • [green]YAGNI[/green] - Identifies premature optimization
+
+[dim]For more info: https://github.com/your-repo/uatiari[/dim]
+"""
+    console.print(help_text)
 
 
 def parse_args() -> tuple[str, str]:
@@ -12,12 +59,10 @@ def parse_args() -> tuple[str, str]:
     Returns:
         Tuple of (branch_name, base_branch)
     """
-    if len(sys.argv) < 2:
-        console.print("\n[bold red]Usage:[/bold red] uatiari <branch-name> [--base=main]")
-        console.print("\n[bold]Example:[/bold]")
-        console.print("  [cyan]uatiari feature/user-authentication[/cyan]")
-        console.print("  [cyan]uatiari feature/new-api --base=develop[/cyan]\n")
-        sys.exit(1)
+    # Check for help flag
+    if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
+        print_help()
+        sys.exit(0)
     
     branch = sys.argv[1]
     base = "main"
@@ -26,6 +71,10 @@ def parse_args() -> tuple[str, str]:
     for arg in sys.argv[2:]:
         if arg.startswith("--base="):
             base = arg.split("=", 1)[1]
+        elif arg.startswith("--"):
+            console.print(f"\n[bold red]Error:[/bold red] Unknown option '{arg}'")
+            console.print("[dim]Use --help for usage information[/dim]\n")
+            sys.exit(1)
     
     return branch, base
 
@@ -71,7 +120,7 @@ def main():
         sys.exit(0)
         
     except KeyboardInterrupt:
-        console.print("\n\n[bold red]✗ Interrupted by user.[/bold red]\n")
+        console.print("\n\n[bold yellow]⚠️  Review cancelled by user.[/bold yellow]\n")
         sys.exit(1)
     except Exception as e:
         print_error(f"Unexpected error: {e}")
