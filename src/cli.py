@@ -55,7 +55,7 @@ def print_help():
 def parse_args() -> tuple[str, str]:
     """
     Parse command line arguments.
-    
+
     Returns:
         Tuple of (branch_name, base_branch)
     """
@@ -63,10 +63,10 @@ def parse_args() -> tuple[str, str]:
     if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
         print_help()
         sys.exit(0)
-    
+
     branch = sys.argv[1]
     base = "main"
-    
+
     # Parse optional --base flag
     for arg in sys.argv[2:]:
         if arg.startswith("--base="):
@@ -75,7 +75,7 @@ def parse_args() -> tuple[str, str]:
             console.print(f"\n[bold red]Error:[/bold red] Unknown option '{arg}'")
             console.print("[dim]Use --help for usage information[/dim]\n")
             sys.exit(1)
-    
+
     return branch, base
 
 
@@ -83,17 +83,17 @@ def main():
     """Main entry point for the CLI application."""
     # Parse arguments
     branch, base = parse_args()
-    
+
     # Print header
     print_header(branch, base)
-    
+
     # Create workflow
     try:
         workflow = create_workflow()
     except Exception as e:
         print_error(f"Failed to initialize workflow: {e}")
         sys.exit(1)
-    
+
     # Initialize state
     initial_state: dict = {
         "branch_name": branch,
@@ -103,22 +103,22 @@ def main():
         "review_plan": "",
         "user_approved": False,
         "review_result": {},
-        "error": None
+        "error": None,
     }
-    
+
     # Run workflow
     try:
         result = workflow.invoke(initial_state)
-        
+
         # Check for errors
         if result.get("error"):
-            print_error(result['error'])
+            print_error(result["error"])
             sys.exit(1)
-        
+
         # Success
         console.print("\n[bold green]✓ Review completed successfully![/bold green]\n")
         sys.exit(0)
-        
+
     except KeyboardInterrupt:
         console.print("\n\n[bold yellow]⚠️  Review cancelled by user.[/bold yellow]\n")
         sys.exit(1)
