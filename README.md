@@ -327,6 +327,4 @@ Built with:
 
 *Made with ❤️ by developers, for developers*
 
-[⭐ Star this repo](https://github.com/your-repo) • [🐛 Report Bug](https://github.com/your-repo/issues) • [💡 Request Feature](https://github.com/your-repo/issues)
-
 </div>
