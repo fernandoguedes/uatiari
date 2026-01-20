@@ -42,10 +42,12 @@ poetry install
 
 # Configure API key
 cp .env.example .env
-# Edit .env and add: GOOGLE_API_KEY=your-key-here
+# Edit .env and add your API keys
 ```
 
-> 🔑 Get your API key at [Google AI Studio](https://aistudio.google.com/app/apikey)
+> 🔑 Get your Google API key at [Google AI Studio](https://aistudio.google.com/app/apikey)
+>
+> 🛠️ **Optional:** To use the Visual Interface with full tracing, get a LangSmith API key at [LangSmith](https://smith.langchain.com/) and add it to `.env`.
 
 ### Basic Usage
 
