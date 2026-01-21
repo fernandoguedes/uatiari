@@ -34,15 +34,41 @@ Python 3.11+  |  Git  |  Google Gemini API Key
 
 ### Installation
 
+#### Global Installation (Recommended)
+
+To use `uatiari` from any repository on your system, install it globally using `pipx`:
+
+```bash
+# Install from local directory
+pipx install .
+
+# Or install directly from git
+# pipx install git+https://github.com/your-repo/uatiari.git
+```
+
+#### Development Installation
+
 ```bash
 # Clone and setup
 git clone <repository-url>
 cd uatiari
 poetry install
+```
 
-# Configure API key
-cp .env.example .env
-# Edit .env and add: GOOGLE_API_KEY=your-key-here
+### Configuration
+
+`uatiari` looks for your `GOOGLE_API_KEY` in the following locations (highest priority first):
+
+1. **Local .env**: `./.env` (Project specific overrides)
+2. **Global Config**: `~/.config/uatiari/.env` (Recommended for global use)
+3. **Legacy Config**: `~/.uatiari.env`
+4. **Environment Variable**: `GOOGLE_API_KEY` exported in shell
+
+**Setup Global Configuration:**
+
+```bash
+mkdir -p ~/.config/uatiari
+echo "GOOGLE_API_KEY=your-key-here" > ~/.config/uatiari/.env
 ```
 
 > 🔑 Get your API key at [Google AI Studio](https://aistudio.google.com/app/apikey)

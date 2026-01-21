@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import subprocess
 
-from src.tools.git_tools import (
+from uatiari.tools.git_tools import (
     validate_branch_exists,
     get_diff,
     get_changed_files,
@@ -51,7 +51,7 @@ class TestValidateBranchExists:
 class TestGetDiff:
     """Tests for get_diff function."""
 
-    @patch("src.tools.git_tools.validate_branch_exists")
+    @patch("uatiari.tools.git_tools.validate_branch_exists")
     @patch("subprocess.run")
     def test_successful_diff(self, mock_run, mock_validate):
         """Test successful diff retrieval."""
@@ -74,7 +74,7 @@ class TestGetDiff:
         with pytest.raises(GitError, match="Not in a git repository"):
             get_diff("feature", "main")
 
-    @patch("src.tools.git_tools.validate_branch_exists")
+    @patch("uatiari.tools.git_tools.validate_branch_exists")
     @patch("subprocess.run")
     def test_base_branch_not_found(self, mock_run, mock_validate):
         """Test error when base branch doesn't exist."""
@@ -84,7 +84,7 @@ class TestGetDiff:
         with pytest.raises(GitError, match="Base branch 'main' does not exist"):
             get_diff("feature", "main")
 
-    @patch("src.tools.git_tools.validate_branch_exists")
+    @patch("uatiari.tools.git_tools.validate_branch_exists")
     @patch("subprocess.run")
     def test_feature_branch_not_found(self, mock_run, mock_validate):
         """Test error when feature branch doesn't exist."""
@@ -94,7 +94,7 @@ class TestGetDiff:
         with pytest.raises(GitError, match="Branch 'feature' does not exist"):
             get_diff("feature", "main")
 
-    @patch("src.tools.git_tools.validate_branch_exists")
+    @patch("uatiari.tools.git_tools.validate_branch_exists")
     @patch("subprocess.run")
     def test_no_differences(self, mock_run, mock_validate):
         """Test error when there are no differences between branches."""
@@ -111,7 +111,7 @@ class TestGetDiff:
 class TestGetChangedFiles:
     """Tests for get_changed_files function."""
 
-    @patch("src.tools.git_tools.validate_branch_exists")
+    @patch("uatiari.tools.git_tools.validate_branch_exists")
     @patch("subprocess.run")
     def test_successful_file_list(self, mock_run, mock_validate):
         """Test successful retrieval of changed files."""
@@ -125,7 +125,7 @@ class TestGetChangedFiles:
 
         assert result == ["file1.py", "file2.py", "file3.py"]
 
-    @patch("src.tools.git_tools.validate_branch_exists")
+    @patch("uatiari.tools.git_tools.validate_branch_exists")
     @patch("subprocess.run")
     def test_empty_file_list(self, mock_run, mock_validate):
         """Test error when no files changed."""

@@ -3,11 +3,11 @@
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from src.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE
-from src.graph.state import ReviewState
-from src.tools.git_tools import get_diff, get_changed_files, GitError
-from src.prompts.xp_reviewer import XP_SYSTEM_PROMPT, PLAN_GENERATION_PROMPT
-from src.logger import (
+from uatiari.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from uatiari.graph.state import ReviewState
+from uatiari.tools.git_tools import get_diff, get_changed_files, GitError
+from uatiari.prompts.xp_reviewer import XP_SYSTEM_PROMPT, PLAN_GENERATION_PROMPT
+from uatiari.logger import (
     print_step,
     print_review_plan,
     print_review_result,

@@ -3,8 +3,8 @@
 from typing import Literal
 from langgraph.graph import StateGraph, END
 
-from src.graph.state import ReviewState
-from src.graph.nodes import (
+from uatiari.graph.state import ReviewState
+from uatiari.graph.nodes import (
     fetch_git_context,
     generate_plan,
     await_approval,
