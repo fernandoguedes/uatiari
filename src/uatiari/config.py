@@ -41,7 +41,9 @@ def load_configurations() -> str | None:
 
     if local_env.exists() and "GOOGLE_API_KEY" in dotenv_values(local_env):
         api_key_source = str(local_env)
-    elif user_config_env.exists() and "GOOGLE_API_KEY" in dotenv_values(user_config_env):
+    elif user_config_env.exists() and "GOOGLE_API_KEY" in dotenv_values(
+        user_config_env
+    ):
         api_key_source = str(user_config_env)
     elif user_home_env.exists() and "GOOGLE_API_KEY" in dotenv_values(user_home_env):
         api_key_source = str(user_home_env)
@@ -77,7 +79,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if "pytest" not in sys.modules:
     if not GOOGLE_API_KEY:
         console.print("\n[bold red]❌ Error: GOOGLE_API_KEY not found.[/bold red]")
-        console.print("Please configure your API key in one of the following locations:")
+        console.print(
+            "Please configure your API key in one of the following locations:"
+        )
         console.print(f"  1. {Path.cwd() / '.env'} (Project specific)")
         console.print(f"  2. {Path.home() / '.config/uatiari/.env'} (Global)")
         console.print(f"  3. {Path.home() / '.uatiari.env'} (Global legacy)")
@@ -85,7 +89,7 @@ if "pytest" not in sys.modules:
         sys.exit(1)
     else:
         if _api_key_source:
-             console.print(f"[dim]Using API key from: {_api_key_source}[/dim]")
+            console.print(f"[dim]Using API key from: {_api_key_source}[/dim]")
 
 # LLM configuration
 LLM_MODEL = "models/gemini-2.5-flash"
