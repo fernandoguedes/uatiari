@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "XP-based code review agent"
 authors = ["Luís Fernando Guedes"]
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "uatiari", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -19,7 +19,7 @@ black = "^23.0.0"
 ruff = "^0.1.0"
 
 [tool.poetry.scripts]
-uatiari = "src.cli:main"
+uatiari = "uatiari.cli:main"
 
 [build-system]
 requires = ["poetry-core"]

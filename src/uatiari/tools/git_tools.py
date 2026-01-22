@@ -136,6 +136,50 @@ def get_changed_files(branch: str, base: str = "main") -> list[str]:
     return files
 
 
+def get_diff_stats(branch: str, base: str = "main") -> dict[str, tuple[int, int]]:
+    """
+    Get statistics of added/deleted lines per file.
+
+    Args:
+        branch: The feature branch
+        base: The base branch (default: "main")
+
+    Returns:
+        Dictionary mapping filename to (added_lines, deleted_lines)
+
+    Raises:
+        GitError: If git operation fails
+    """
+    # Validate environment
+    _check_git_repository()
+
+    # Validate both branches exist
+    if not validate_branch_exists(base):
+        raise GitError(f"Base branch '{base}' does not exist.")
+
+    if not validate_branch_exists(branch):
+        raise GitError(f"Branch '{branch}' does not exist.")
+
+    # Get numstat
+    result = _run_git_command(["diff", "--numstat", f"{base}...{branch}"])
+
+    stats = {}
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) >= 3:
+            try:
+                added = int(parts[0]) if parts[0] != "-" else 0
+                deleted = int(parts[1]) if parts[1] != "-" else 0
+                filename = parts[2]
+                stats[filename] = (added, deleted)
+            except ValueError:
+                continue
+
+    return stats
+
+
 def get_repository_root() -> str:
     """
     Get the root directory of the git repository.

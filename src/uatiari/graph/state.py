@@ -18,6 +18,7 @@ class ReviewState(TypedDict):
     # Git context
     diff_content: str
     changed_files: list[str]
+    diff_stats: dict[str, tuple[int, int]]
 
     # Review workflow
     review_plan: str

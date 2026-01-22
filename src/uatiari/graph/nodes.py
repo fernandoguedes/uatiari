@@ -3,11 +3,16 @@
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from src.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE
-from src.graph.state import ReviewState
-from src.tools.git_tools import get_diff, get_changed_files, GitError
-from src.prompts.xp_reviewer import XP_SYSTEM_PROMPT, PLAN_GENERATION_PROMPT
-from src.logger import (
+from uatiari.config import GOOGLE_API_KEY, LLM_MODEL, LLM_TEMPERATURE
+from uatiari.graph.state import ReviewState
+from uatiari.tools.git_tools import (
+    get_diff,
+    get_changed_files,
+    get_diff_stats,
+    GitError,
+)
+from uatiari.prompts.xp_reviewer import XP_SYSTEM_PROMPT, PLAN_GENERATION_PROMPT
+from uatiari.logger import (
     print_step,
     print_review_plan,
     print_review_result,
@@ -35,6 +40,7 @@ def fetch_git_context(state: ReviewState) -> ReviewState:
         # Get diff and changed files
         diff_content = get_diff(branch, base)
         changed_files = get_changed_files(branch, base)
+        diff_stats = get_diff_stats(branch, base)
 
         print_step(f"Found {len(changed_files)} changed file(s)", "success")
 
@@ -42,6 +48,7 @@ def fetch_git_context(state: ReviewState) -> ReviewState:
             **state,
             "diff_content": diff_content,
             "changed_files": changed_files,
+            "diff_stats": diff_stats,
             "error": None,
         }
     except GitError as e:
@@ -159,6 +166,50 @@ def execute_review(state: ReviewState) -> ReviewState:
                 "error": "Invalid JSON response from LLM",
                 "raw_response": response.content,
             }
+
+        # Inject deterministic test analysis
+        try:
+            diff_stats = state.get("diff_stats", {})
+            prod_lines = 0
+            test_lines = 0
+
+            for filename, (added, deleted) in diff_stats.items():
+                if "test" in filename.lower():
+                    test_lines += added
+                else:
+                    prod_lines += added
+
+            ratio = 0.0
+            if prod_lines > 0:
+                ratio = test_lines / prod_lines
+            elif test_lines > 0:
+                # Infinite ratio (tests only), cap or handle gracefully
+                ratio = 100.0
+
+            if ratio >= 1.0:
+                verdict = "EXCELLENT"
+            elif ratio >= 0.5:
+                verdict = "GOOD"
+            elif ratio > 0:
+                verdict = "ACCEPTABLE"
+            elif prod_lines == 0 and test_lines == 0:
+                verdict = "N/A"
+            else:
+                verdict = "MISSING"
+
+            # Merge with LLM result, overriding the numbers
+            existing_analysis = review_result.get("test_analysis", {})
+            if isinstance(existing_analysis, dict):
+                # Keep notes/missing_tests_for from LLM if present
+                existing_analysis["production_lines"] = prod_lines
+                existing_analysis["test_lines"] = test_lines
+                existing_analysis["ratio"] = ratio
+                existing_analysis["verdict"] = verdict
+                review_result["test_analysis"] = existing_analysis
+
+        except Exception as e:
+            # Don't fail the whole review if stats fail
+            print_error(f"Failed to calculate test stats: {e}")
 
         return {**state, "review_result": review_result, "error": None}
     except Exception as e:

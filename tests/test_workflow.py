@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from src.graph.state import ReviewState
-from src.graph.workflow import should_continue, create_workflow
+from uatiari.graph.state import ReviewState
+from uatiari.graph.workflow import should_continue, create_workflow
 
 
 class TestShouldContinue:
@@ -68,9 +68,9 @@ class TestCreateWorkflow:
         # Verify workflow is compiled and ready
         assert workflow is not None
 
-    @patch("src.graph.nodes.ask_approval")
-    @patch("src.graph.nodes.get_diff")
-    @patch("src.graph.nodes.get_changed_files")
+    @patch("uatiari.graph.nodes.ask_approval")
+    @patch("uatiari.graph.nodes.get_diff")
+    @patch("uatiari.graph.nodes.get_changed_files")
     def test_workflow_execution_with_error(self, mock_files, mock_diff, mock_approval):
         """Test workflow handles git errors gracefully."""
         mock_diff.side_effect = Exception("Git error")
