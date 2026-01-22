@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from uatiari.graph.state import ReviewState
-from uatiari.graph.workflow import should_continue, create_workflow
+from uatiari.graph.workflow import create_workflow, should_continue
 
 
 class TestShouldContinue:

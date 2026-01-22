@@ -3,7 +3,8 @@
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv, dotenv_values
+
+from dotenv import dotenv_values, load_dotenv
 from rich.console import Console
 
 # Use stderr for config logs to avoid interfering with potential stdout output

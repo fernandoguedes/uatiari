@@ -1,6 +1,7 @@
 """Tests for git statistics."""
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from uatiari.tools.git_tools import get_diff_stats
 
 

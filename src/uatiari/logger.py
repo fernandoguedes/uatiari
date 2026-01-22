@@ -1,11 +1,12 @@
 """Modern logging utilities using rich library."""
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.markdown import Markdown
-from rich.syntax import Syntax
 import json
+
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.table import Table
 
 # Create console instance
 console = Console()

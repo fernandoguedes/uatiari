@@ -1,7 +1,8 @@
 """CLI entry point for uatiari code review agent."""
 import sys
+
 from uatiari.graph.workflow import create_workflow
-from uatiari.logger import print_header, print_error, console
+from uatiari.logger import console, print_error, print_header
 
 
 def print_help():

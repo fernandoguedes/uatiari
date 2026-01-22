@@ -1,14 +1,14 @@
 """Tests for git_tools module."""
 
-import pytest
-from unittest.mock import patch, MagicMock
 import subprocess
+from unittest.mock import MagicMock, patch
 
+import pytest
 from uatiari.tools.git_tools import (
-    validate_branch_exists,
-    get_diff,
-    get_changed_files,
     GitError,
+    get_changed_files,
+    get_diff,
+    validate_branch_exists,
 )
 
 
