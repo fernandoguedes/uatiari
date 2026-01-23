@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "uatiari"
-version = "0.1.0"
+version = "0.1.1"
 description = "XP-based code review agent"
 authors = ["Luís Fernando Guedes"]
 readme = "README.md"
