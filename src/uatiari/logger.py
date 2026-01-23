@@ -79,6 +79,25 @@ def print_review_result(result: dict):
     )
     console.print()
 
+    # Metadata / Skills
+    metadata = result.get("metadata", {})
+    if metadata:
+        framework = metadata.get("framework_detected")
+        skills = metadata.get("skills_applied", [])
+        method = metadata.get("detection_method")
+
+        if framework:
+            console.print(
+                Panel(
+                    f"[cyan]Framework:[/cyan] {framework.title()}\n"
+                    f"[cyan]Skills:[/cyan] {', '.join(skills)}\n"
+                    f"[cyan]Detection:[/cyan] {method}",
+                    title="[bold]🛠️  Skills Applied[/bold]",
+                    border_style="magenta",
+                )
+            )
+            console.print()
+
     # Overall verdict
     verdict = result.get("overall", {})
     verdict_text = verdict.get("verdict", "UNKNOWN")

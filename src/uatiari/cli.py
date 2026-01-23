@@ -26,9 +26,10 @@ def print_help():
   [green]update[/green]           Update uatiari to the latest version
 
 [bold]OPTIONS:[/bold]
-  [green]--base=<branch>[/green]   Base branch for comparison (default: main)
-  [green]--version[/green]         Show version information
-  [green]--help, -h[/green]        Show this help message
+  [green]--base=<branch>[/green]        Base branch for comparison (default: main)
+  [green]--framework=<name>[/green]    Manually specify framework (e.g., laravel)
+  [green]--version[/green]              Show version information
+  [green]--help, -h[/green]             Show this help message
 
 [bold]EXAMPLES:[/bold]
   [dim]# Review feature branch against main[/dim]
@@ -36,6 +37,9 @@ def print_help():
 
   [dim]# Review against develop branch[/dim]
   [cyan]uatiari feature/new-api --base=develop[/cyan]
+
+  [dim]# Force Laravel skills[/dim]
+  [cyan]uatiari feature/payment --framework=laravel[/cyan]
 
   [dim]# Get help[/dim]
   [cyan]uatiari --help[/cyan]
@@ -58,12 +62,12 @@ def print_help():
     console.print(help_text)
 
 
-def parse_args() -> tuple[str, str]:
+def parse_args() -> tuple[str, str, str | None]:
     """
     Parse command line arguments.
 
     Returns:
-        Tuple of (branch_name, base_branch)
+        Tuple of (branch_name, base_branch, framework)
     """
     # Check for help flag
     if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
@@ -81,23 +85,26 @@ def parse_args() -> tuple[str, str]:
 
     branch = sys.argv[1]
     base = "main"
+    framework = None
 
-    # Parse optional --base flag
+    # Parse optional flags
     for arg in sys.argv[2:]:
         if arg.startswith("--base="):
             base = arg.split("=", 1)[1]
+        elif arg.startswith("--framework="):
+            framework = arg.split("=", 1)[1]
         elif arg.startswith("--"):
             console.print(f"\n[bold red]Error:[/bold red] Unknown option '{arg}'")
             console.print("[dim]Use --help for usage information[/dim]\n")
             sys.exit(1)
 
-    return branch, base
+    return branch, base, framework
 
 
 def main():
     """Main entry point for the CLI application."""
     # Parse arguments
-    branch, base = parse_args()
+    branch, base, framework = parse_args()
 
     # Print header
     print_header(branch, base)
@@ -115,10 +122,12 @@ def main():
     initial_state: dict = {
         "branch_name": branch,
         "base_branch": base,
+        "manual_framework": framework,
         "diff_content": "",
         "changed_files": [],
         "review_plan": "",
         "user_approved": False,
+        "active_skills": [],
         "review_result": {},
         "error": None,
     }

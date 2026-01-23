@@ -13,12 +13,14 @@ from uatiari.logger import (
     print_review_result,
     print_step,
 )
+from uatiari.prompts.skills.laravel import LaravelSkill
 from uatiari.prompts.xp_reviewer import PLAN_GENERATION_PROMPT, XP_SYSTEM_PROMPT
 from uatiari.tools.git_tools import (
     GitError,
     get_changed_files,
     get_diff,
     get_diff_stats,
+    list_repository_files,
 )
 
 
@@ -132,9 +134,47 @@ def execute_review(state: ReviewState) -> ReviewState:
             model=LLM_MODEL, temperature=LLM_TEMPERATURE, google_api_key=GOOGLE_API_KEY
         )
 
+        # Skills detection
+        available_skills = [LaravelSkill()]
+        active_skills = []
+        prompt_addons = []
+
+        # Get repository files for detection
+        try:
+            repo_files = list_repository_files()
+        except Exception:
+            # If we can't list files (e.g. error), assume empty list
+            # Detection will rely on changed files or manual override
+            repo_files = []
+
+        manual_framework = state.get("manual_framework")
+
+        for skill in available_skills:
+            is_active = False
+            # 1. Manual override
+            if manual_framework and manual_framework.lower() == skill.name:
+                is_active = True
+                print_step(f"Skill '{skill.name}' activated manually", "info")
+
+            # 2. Automatic detection (if no manual override specified)
+            elif not manual_framework and skill.detect(
+                repo_files, state["changed_files"]
+            ):
+                is_active = True
+                print_step(f"Skill '{skill.name}' detected automatically", "info")
+
+            if is_active:
+                active_skills.append(skill)
+                prompt_addons.append(skill.get_prompt_addon())
+
+        # Compose system prompt
+        system_prompt = XP_SYSTEM_PROMPT
+        if prompt_addons:
+            system_prompt += "\n\n" + "\n\n".join(prompt_addons)
+
         # Create messages for the review
         messages = [
-            ("system", XP_SYSTEM_PROMPT),
+            ("system", system_prompt),
             ("human", f"Review this git diff:\n\n{state['diff_content']}"),
         ]
 
@@ -167,6 +207,16 @@ def execute_review(state: ReviewState) -> ReviewState:
                 "error": "Invalid JSON response from LLM",
                 "raw_response": response.content,
             }
+
+        # Metadata injection
+        if active_skills:
+            metadata = {
+                "framework_detected": active_skills[0].name,  # Simplification
+                "skills_applied": [s.name for s in active_skills],
+                "detection_method": "manual" if manual_framework else "automatic",
+                "skill_details": [s.get_metadata() for s in active_skills],
+            }
+            review_result["metadata"] = metadata
 
         # Inject deterministic test analysis
         try:
@@ -212,7 +262,12 @@ def execute_review(state: ReviewState) -> ReviewState:
             # Don't fail the whole review if stats fail
             print_error(f"Failed to calculate test stats: {e}")
 
-        return {**state, "review_result": review_result, "error": None}
+        return {
+            **state,
+            "review_result": review_result,
+            "active_skills": [s.name for s in active_skills],
+            "error": None,
+        }
     except Exception as e:
         print_error(f"Failed to execute review: {e}")
         return {**state, "error": f"Failed to execute review: {e}"}

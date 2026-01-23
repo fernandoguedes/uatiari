@@ -240,3 +240,18 @@ def get_commit_count(branch: str, base: str = "main") -> int:
         return int(result.stdout.strip())
     except ValueError:
         return 0
+
+
+def list_repository_files() -> list[str]:
+    """
+    List all tracked files in the repository.
+
+    Returns:
+        List of file paths relative to repo root
+
+    Raises:
+        GitError: If git operation fails
+    """
+    _check_git_repository()
+    result = _run_git_command(["ls-tree", "-r", "--name-only", "HEAD"])
+    return [f.strip() for f in result.stdout.split("\n") if f.strip()]
