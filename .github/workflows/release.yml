@@ -51,11 +51,18 @@ jobs:
         source .venv/bin/activate
         pyinstaller build.spec
 
+    - name: Get version
+      id: get_version
+      run: |
+        VERSION=$(grep "__version__" src/uatiari/version.py | cut -d '"' -f 2)
+        echo "VERSION=v$VERSION" >> $GITHUB_ENV
+
     - name: Rename binary (Unix)
       run: mv dist/uatiari dist/${{ matrix.asset_name }}
 
     - name: Upload binaries to Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
       with:
         files: dist/${{ matrix.asset_name }}
+        tag_name: ${{ env.VERSION }}
