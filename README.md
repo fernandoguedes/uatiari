@@ -111,7 +111,7 @@ $ uatiari feature/payment-validation
 
 ```
 🎯 uatiari - XP Code Reviewer
-📊 Branch: feature/payment-validation (base: main)
+Branch: feature/payment-validation → main
 
 ⏳ Fetching git context...
 ✅ Found 3 changed file(s)
@@ -119,80 +119,64 @@ $ uatiari feature/payment-validation
 ⏳ Generating review plan...
 ```
 
-<details>
-<summary>📋 Review Plan</summary>
-
 ```
-╭─────────────────────────────────────────────────────────────────╮
-│                                                                 │
-│  🔴 HIGH RISK                                                    │
-│  • src/payment/processor.py (145L) - payment validation         │
-│                                                                 │
-│  🟡 MEDIUM RISK                                                  │
-│  • src/services/email.py (34L) - notification handling          │
-│                                                                 │
-│  🟢 LOW RISK                                                     │
-│  • tests/test_payment.py (89L) - test coverage                  │
-│                                                                 │
-│  XP Focus:                                                      │
-│  • Business rule correctness in amount validation               │
-│  • Simple design: single responsibility check                   │
-│  • Test coverage for critical payment paths                     │
-│                                                                 │
-│  Estimated time: 8-10 minutes                                   │
-│                                                                 │
-╰─────────────────────────────────────────────────────────────────╯
-```
+╭─ 📋 Review Plan ───────────────────────────────────────────────────╮
+│                                                                    │
+│  **1. Files to Review:**                                           │
+│     • src/payment/processor.py (145 lines modified) - Implements   │
+│       new validation logic for transaction amounts.                │
+│     • src/services/email.py (34 lines modified) - Updates          │
+│       notification templates for failed payments.                  │
+│                                                                    │
+│  **2. XP Aspects to Check:**                                       │
+│     • Business Logic: Does the validation correctly handle         │
+│       negative amounts and zero values?                            │
+│     • Simple Design: Is the validation logic coupled with          │
+│       persistence, violating SRP?                                  │
+│     • Test Coverage: Are there unit tests for the new edge cases?  │
+│                                                                    │
+│  **3. Estimated Review Time:** 8-10 minutes                        │
+│                                                                    │
+╰────────────────────────────────────────────────────────────────────╯
 
-</details>
-
-```
 Approve execution? (y/n): y
+✓ Approved
 
-🚀 Executing XP review...
+⏳ Executing XP review...
 ```
 
-<details>
-<summary>✅ Review Results</summary>
-
-```json
-{
-  "blocking_issues": [
-    {
-      "file": "src/payment/processor.py",
-      "lines": "78-92",
-      "category": "BUSINESS_LOGIC",
-      "issue": "Payment validation allows negative amounts",
-      "action": "Add validation: amount > 0 and < MAX_TRANSACTION_LIMIT",
-      "why_blocking": "Risk of fraudulent transactions"
-    }
-  ],
-  "warnings": [
-    {
-      "file": "src/payment/processor.py",
-      "lines": "120-165",
-      "category": "COMPLEXITY",
-      "issue": "45-line method handles validation + API call + persistence",
-      "suggestion": "Extract 'persistTransaction' to separate method",
-      "effort": "20 minutes",
-      "xp_principle": "Simple Design"
-    }
-  ],
-  "test_analysis": {
-    "has_tests": true,
-    "test_files": ["tests/test_payment.py"],
-    "notes": "Missing edge case: zero and negative amount tests",
-    "verdict": "NEEDS_IMPROVEMENT"
-  },
-  "overall": {
-    "verdict": "REQUEST_CHANGES",
-    "reason": "Critical business validation missing",
-    "confidence": "HIGH"
-  }
-}
 ```
+╭─ ✅ Review Complete ──────────────────────────────────────────────╮
+│                                                                   │
+│                     REQUEST_CHANGES                               │
+│  Critical business validation missing in payment implementation   │
+│                                                                   │
+╰───────────────────────────────────────────────────────────────────╯
 
-</details>
+╭─ 🚫 Blocking Issues ──────────────────────────────────────────────╮
+│ File                   Lines   Issue                  Action      │
+│ ───────────────────────────────────────────────────────────────── │
+│ src/payment/processor  78-92   Business Logic: Allow  Add check:  │
+│ .py                            s negative amounts     amount > 0  │
+╰───────────────────────────────────────────────────────────────────╯
+
+╭─ ⚠️  Warnings ────────────────────────────────────────────────────╮
+│ File              Lines    Issue             Suggestion    Effort │
+│ ───────────────────────────────────────────────────────────────── │
+│ src/payment/proc  120-165  Complex Method:   Extract       20 min │
+│ essor.py                   Dual responsibil  method               │
+│                            ities                                  │
+╰───────────────────────────────────────────────────────────────────╯
+
+╭─ 📊 Test Coverage Analysis ───────────────────────────────────────╮
+│                                                                   │
+│  Production Lines: 125                                            │
+│  Test Lines: 45                                                   │
+│  Ratio: 0.36                                                      │
+│  Verdict: MISSING                                                 │
+│                                                                   │
+╰───────────────────────────────────────────────────────────────────╯
+```
 
 ---
 
@@ -201,42 +185,61 @@ Approve execution? (y/n): y
 ### Workflow
 
 ```mermaid
-graph LR
-    A[START] --> B[Fetch Git Context]
-    B --> C[Generate Plan]
-    C --> D{Human Approval?}
-    D -->|Yes| E[Execute Review]
-    D -->|No| F[END]
-    E --> G[Generate Report]
-    G --> F
+graph TD
+    %% Output Styling
+    classDef startend fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1;
+    classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c;
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,stroke-dasharray: 5 5,color:#f57f17;
+    classDef artifact fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:#1b5e20;
+
+    Start([🚀 START]):::startend --> Init[Fetch Git Context]:::process
+    Init --> Diff{Diff Found?}:::decision
+    
+    Diff -->|No| NoDiff[Exit]:::startend
+    Diff -->|Yes| Plan[Generate Plan]:::process
+    
+    Plan --> ShowPlan[📋 Display Plan]:::artifact
+    ShowPlan --> Approval{👤 Approve?}:::decision
+    
+    Approval -->|No| Abort([🛑 Abort]):::startend
+    Approval -->|Yes| Exec[Execute Review]:::process
+    
+    Exec -- Agent --x Report[📊 Generate Report]:::artifact
+    Report --> End([🏁 END]):::startend
 ```
 
 ### Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| **Orchestration** | LangGraph (state machine) |
+| **Orchestration** | LangGraph (State Machine) |
 | **AI Model** | Google Gemini 2.0 Flash |
 | **Git Integration** | Native Git CLI |
-| **Terminal UI** | Rich library |
-| **Language** | Python 3.11+ |
+| **Terminal UI** | Rich (Tables, Panels, Markdown) |
+| **Distribution** | PyInstaller (Standalone Binary) |
 
 ### Project Structure
 
 ```
 uatiari/
 ├── 📁 src/
-│   ├── cli.py                 # Entry point
-│   ├── config.py              # Environment setup
-│   ├── 📁 graph/
-│   │   ├── state.py           # Workflow state
-│   │   ├── nodes.py           # LangGraph nodes
-│   │   └── workflow.py        # State machine
-│   ├── 📁 tools/
-│   │   └── git_tools.py       # Git operations
-│   └── 📁 prompts/
-│       └── xp_reviewer.py     # System prompts
-└── 📁 tests/                  # Test suite
+│   └── 📁 uatiari/            # Main package
+│       ├── cli.py             # Entry point
+│       ├── config.py          # Configuration & Constants
+│       ├── logger.py          # Rich-based Output System
+│       ├── skills_manager.py  # Language/Framework Detection
+│       ├── updater.py         # Self-update Mechanism
+│       ├── version.py         # Version Control
+│       ├── 📁 graph/          # LangGraph Implementation
+│       │   ├── state.py       # TypedDict definitions
+│       │   ├── nodes.py       # Workflow Steps
+│       │   └── workflow.py    # Graph Compilation
+│       ├── 📁 tools/          # Helpers
+│       │   └── git_tools.py   # Diff & File Operations
+│       └── 📁 prompts/        # System Prompts
+│           └── xp_reviewer.py # XP Methodology Rules
+├── 📁 tests/                  # Pytest Suite
+└── 📜 install.sh              # Installation Script
 ```
 
 ---
