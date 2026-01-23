@@ -114,7 +114,9 @@ def update_cli():
             break
 
     if not asset:
-        console.print(f"[red]No compatible update package found for {system}-{arch}.[/red]")
+        console.print(
+            f"[red]No compatible update package found for {system}-{arch}.[/red]"
+        )
         return
 
     # Download and install
@@ -144,15 +146,17 @@ def update_cli():
             console.print("Extracting update...")
             with tarfile.open(download_path, "r:gz") as tar:
                 # Security: use filter='data' if available (Python 3.12+), otherwise be careful
-                if hasattr(tarfile.TarFile, 'extraction_filter'):
-                    tar.extractall(path=tmp_extract_dir, filter='data')
+                if hasattr(tarfile.TarFile, "extraction_filter"):
+                    tar.extractall(path=tmp_extract_dir, filter="data")
                 else:
                     tar.extractall(path=tmp_extract_dir)
 
             # The tar contains a folder named 'uatiari'
             extracted_folder = Path(tmp_extract_dir) / "uatiari"
             if not extracted_folder.exists():
-                raise Exception("Update package structure is invalid (missing 'uatiari' folder)")
+                raise Exception(
+                    "Update package structure is invalid (missing 'uatiari' folder)"
+                )
 
             # Prepare for swap
             backup_dir = install_dir.parent / f"{install_dir.name}.bak"
@@ -160,26 +164,28 @@ def update_cli():
                 shutil.rmtree(backup_dir)
 
             console.print("Installing update...")
-            
+
             # Atomic-ish swap
             # 1. Rename current to backup
             shutil.move(str(install_dir), str(backup_dir))
-            
+
             try:
                 # 2. Move new to current
                 shutil.move(str(extracted_folder), str(install_dir))
-                
+
                 # Restore execution permissions for the binary
                 new_binary = install_dir / "uatiari"
                 if new_binary.exists():
                     os.chmod(new_binary, 0o755)
-                
+
                 # 3. Cleanup backup
                 shutil.rmtree(backup_dir)
-                
+
             except Exception as e:
                 # Rollback
-                console.print(f"[red]Installation failed, rolling back... Error: {e}[/red]")
+                console.print(
+                    f"[red]Installation failed, rolling back... Error: {e}[/red]"
+                )
                 if install_dir.exists():
                     shutil.rmtree(install_dir)
                 shutil.move(str(backup_dir), str(install_dir))
