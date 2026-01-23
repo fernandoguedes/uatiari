@@ -122,18 +122,20 @@ Branch: feature/payment-validation → main
 ```
 ╭─ 📋 Review Plan ───────────────────────────────────────────────────╮
 │                                                                    │
-│  ## 🔴 HIGH RISK                                                   │
-│  - src/payment/processor.py (145L)                                 │
-│    - Risk: Financial calculation correctness                       │
+│  **1. Files to Review:**                                           │
+│     • src/payment/processor.py (145 lines modified) - Implements   │
+│       new validation logic for transaction amounts.                │
+│     • src/services/email.py (34 lines modified) - Updates          │
+│       notification templates for failed payments.                  │
 │                                                                    │
-│  ## 🟡 MEDIUM RISK                                                 │
-│  - src/services/email.py (34L)                                     │
-│    - Risk: Notification delivery reliability                       │
+│  **2. XP Aspects to Check:**                                       │
+│     • Business Logic: Does the validation correctly handle         │
+│       negative amounts and zero values?                            │
+│     • Simple Design: Is the validation logic coupled with          │
+│       persistence, violating SRP?                                  │
+│     • Test Coverage: Are there unit tests for the new edge cases?  │
 │                                                                    │
-│  ## XP Focus                                                       │
-│  - Verify business logic in payment calculation                    │
-│  - Check for Single Responsibility Principle violation             │
-│  - Ensure 100% coverage on new financial logic                     │
+│  **3. Estimated Review Time:** 8-10 minutes                        │
 │                                                                    │
 ╰────────────────────────────────────────────────────────────────────╯
 
