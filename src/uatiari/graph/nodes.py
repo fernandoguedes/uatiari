@@ -13,8 +13,8 @@ from uatiari.logger import (
     print_review_result,
     print_step,
 )
-from uatiari.prompts.skills.laravel import LaravelSkill
-from uatiari.prompts.xp_reviewer import PLAN_GENERATION_PROMPT, XP_SYSTEM_PROMPT
+from uatiari.prompts.xp_reviewer import PLAN_GENERATION_PROMPT
+from uatiari.skills_manager import SkillManager
 from uatiari.tools.git_tools import (
     GitError,
     get_changed_files,
@@ -134,10 +134,8 @@ def execute_review(state: ReviewState) -> ReviewState:
             model=LLM_MODEL, temperature=LLM_TEMPERATURE, google_api_key=GOOGLE_API_KEY
         )
 
-        # Skills detection
-        available_skills = [LaravelSkill()]
-        active_skills = []
-        prompt_addons = []
+        # Initialize SkillManager
+        skill_manager = SkillManager()
 
         # Get repository files for detection
         try:
@@ -147,28 +145,13 @@ def execute_review(state: ReviewState) -> ReviewState:
             # Detection will rely on changed files or manual override
             repo_files = []
 
-        manual_skill = state.get("manual_skill")
+        # Detect skills
+        active_skills = skill_manager.detect_skills(
+            state.get("manual_skill"), repo_files, state["changed_files"]
+        )
 
-        for skill in available_skills:
-            is_active = False
-            # 1. Manual override
-            if manual_skill and manual_skill.lower() == skill.name:
-                is_active = True
-                print_step(f"Skill '{skill.name}' activated manually", "info")
-
-            # 2. Automatic detection (if no manual override specified)
-            elif not manual_skill and skill.detect(repo_files, state["changed_files"]):
-                is_active = True
-                print_step(f"Skill '{skill.name}' detected automatically", "info")
-
-            if is_active:
-                active_skills.append(skill)
-                prompt_addons.append(skill.get_prompt_addon())
-
-        # Compose system prompt
-        system_prompt = XP_SYSTEM_PROMPT
-        if prompt_addons:
-            system_prompt += "\n\n" + "\n\n".join(prompt_addons)
+        # Get enriched system prompt
+        system_prompt = skill_manager.get_system_prompt()
 
         # Create messages for the review
         messages = [
@@ -207,13 +190,8 @@ def execute_review(state: ReviewState) -> ReviewState:
             }
 
         # Metadata injection
-        if active_skills:
-            metadata = {
-                "framework_detected": active_skills[0].name,  # Simplification
-                "skills_applied": [s.name for s in active_skills],
-                "detection_method": "manual" if manual_skill else "automatic",
-                "skill_details": [s.get_metadata() for s in active_skills],
-            }
+        metadata = skill_manager.get_metadata(state.get("manual_skill"))
+        if metadata:
             review_result["metadata"] = metadata
 
         # Inject deterministic test analysis
