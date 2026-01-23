@@ -147,19 +147,17 @@ def execute_review(state: ReviewState) -> ReviewState:
             # Detection will rely on changed files or manual override
             repo_files = []
 
-        manual_framework = state.get("manual_framework")
+        manual_skill = state.get("manual_skill")
 
         for skill in available_skills:
             is_active = False
             # 1. Manual override
-            if manual_framework and manual_framework.lower() == skill.name:
+            if manual_skill and manual_skill.lower() == skill.name:
                 is_active = True
                 print_step(f"Skill '{skill.name}' activated manually", "info")
 
             # 2. Automatic detection (if no manual override specified)
-            elif not manual_framework and skill.detect(
-                repo_files, state["changed_files"]
-            ):
+            elif not manual_skill and skill.detect(repo_files, state["changed_files"]):
                 is_active = True
                 print_step(f"Skill '{skill.name}' detected automatically", "info")
 
@@ -213,7 +211,7 @@ def execute_review(state: ReviewState) -> ReviewState:
             metadata = {
                 "framework_detected": active_skills[0].name,  # Simplification
                 "skills_applied": [s.name for s in active_skills],
-                "detection_method": "manual" if manual_framework else "automatic",
+                "detection_method": "manual" if manual_skill else "automatic",
                 "skill_details": [s.get_metadata() for s in active_skills],
             }
             review_result["metadata"] = metadata

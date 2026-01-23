@@ -27,7 +27,7 @@ def print_help():
 
 [bold]OPTIONS:[/bold]
   [green]--base=<branch>[/green]        Base branch for comparison (default: main)
-  [green]--framework=<name>[/green]    Manually specify framework (e.g., laravel)
+  [green]--skill=<name>[/green]         Manually specify skill (e.g., laravel)
   [green]--version[/green]              Show version information
   [green]--help, -h[/green]             Show this help message
 
@@ -38,8 +38,8 @@ def print_help():
   [dim]# Review against develop branch[/dim]
   [cyan]uatiari feature/new-api --base=develop[/cyan]
 
-  [dim]# Force Laravel skills[/dim]
-  [cyan]uatiari feature/payment --framework=laravel[/cyan]
+  [dim]# Use Laravel skills[/dim]
+  [cyan]uatiari feature/payment --skill=laravel[/cyan]
 
   [dim]# Get help[/dim]
   [cyan]uatiari --help[/cyan]
@@ -67,7 +67,7 @@ def parse_args() -> tuple[str, str, str | None]:
     Parse command line arguments.
 
     Returns:
-        Tuple of (branch_name, base_branch, framework)
+        Tuple of (branch_name, base_branch, skill)
     """
     # Check for help flag
     if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
@@ -85,26 +85,26 @@ def parse_args() -> tuple[str, str, str | None]:
 
     branch = sys.argv[1]
     base = "main"
-    framework = None
+    skill = None
 
     # Parse optional flags
     for arg in sys.argv[2:]:
         if arg.startswith("--base="):
             base = arg.split("=", 1)[1]
-        elif arg.startswith("--framework="):
-            framework = arg.split("=", 1)[1]
+        elif arg.startswith("--skill="):
+            skill = arg.split("=", 1)[1]
         elif arg.startswith("--"):
             console.print(f"\n[bold red]Error:[/bold red] Unknown option '{arg}'")
             console.print("[dim]Use --help for usage information[/dim]\n")
             sys.exit(1)
 
-    return branch, base, framework
+    return branch, base, skill
 
 
 def main():
     """Main entry point for the CLI application."""
     # Parse arguments
-    branch, base, framework = parse_args()
+    branch, base, skill = parse_args()
 
     # Print header
     print_header(branch, base)
@@ -122,7 +122,7 @@ def main():
     initial_state: dict = {
         "branch_name": branch,
         "base_branch": base,
-        "manual_framework": framework,
+        "manual_skill": skill,
         "diff_content": "",
         "changed_files": [],
         "review_plan": "",

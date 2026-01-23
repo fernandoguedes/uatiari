@@ -89,8 +89,8 @@ def print_review_result(result: dict):
         if framework:
             console.print(
                 Panel(
-                    f"[cyan]Framework:[/cyan] {framework.title()}\n"
-                    f"[cyan]Skills:[/cyan] {', '.join(skills)}\n"
+                    f"[cyan]Skill:[/cyan] {framework.title()}\n"
+                    f"[cyan]Modules:[/cyan] {', '.join(skills)}\n"
                     f"[cyan]Detection:[/cyan] {method}",
                     title="[bold]🛠️  Skills Applied[/bold]",
                     border_style="magenta",

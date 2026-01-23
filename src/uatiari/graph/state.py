@@ -14,7 +14,7 @@ class ReviewState(TypedDict):
     # Input parameters
     branch_name: str
     base_branch: str
-    manual_framework: Optional[str]  # e.g., 'laravel' or None
+    manual_skill: Optional[str]  # e.g., 'laravel' or None
 
     # Git context
     diff_content: str

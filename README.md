@@ -80,8 +80,8 @@ uatiari feature/user-authentication
 # Compare against a different base
 uatiari feature/new-api --base=develop
 
-# Force specific framework skills (e.g., Laravel)
-uatiari feature/payment --framework=laravel
+# Use specific skills (e.g., Laravel)
+uatiari feature/payment --skill=laravel
 ```
 
 ### 🧠 Skills System
@@ -91,7 +91,7 @@ uatiari feature/payment --framework=laravel
 **Supported Skills:**
 - **Laravel**: Focuses on N+1 queries, Eloquent performance, security (SQLi, mass assignment), and database design.
 
-You can also manually force a specific skill set using the `--framework` flag.
+You can also manually use a specific skill set using the `--skill` flag.
 
 ### Updating
 
