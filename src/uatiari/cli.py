@@ -3,6 +3,8 @@ import sys
 
 from uatiari.graph.workflow import create_workflow
 from uatiari.logger import console, print_error, print_header
+from uatiari.updater import update_cli
+from uatiari.version import __version__
 
 
 def print_help():
@@ -19,10 +21,15 @@ def print_help():
   [cyan]uatiari[/cyan] <branch-name> [options]
 
 [bold]ARGUMENTS:[/bold]
+[bold]ARGUMENTS:[/bold]
   [yellow]<branch-name>[/yellow]    Branch to review against base (required)
+
+[bold]COMMANDS:[/bold]
+  [green]update[/green]           Update uatiari to the latest version
 
 [bold]OPTIONS:[/bold]
   [green]--base=<branch>[/green]   Base branch for comparison (default: main)
+  [green]--version[/green]         Show version information
   [green]--help, -h[/green]        Show this help message
 
 [bold]EXAMPLES:[/bold]
@@ -63,6 +70,15 @@ def parse_args() -> tuple[str, str]:
     # Check for help flag
     if len(sys.argv) < 2 or "--help" in sys.argv or "-h" in sys.argv:
         print_help()
+        sys.exit(0)
+
+    if "--version" in sys.argv:
+        console.print(f"uatiari version {__version__}")
+        sys.exit(0)
+
+    # Check for commands
+    if sys.argv[1] == "update":
+        update_cli()
         sys.exit(0)
 
     branch = sys.argv[1]
