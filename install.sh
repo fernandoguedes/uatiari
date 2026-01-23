@@ -3,7 +3,9 @@ set -e
 
 REPO="fernandoguedes/uatiari"
 BINARY_NAME="uatiari"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_ROOT="$HOME/.local/share"
+INSTALL_DIR="$INSTALL_ROOT/uatiari"
+BIN_DIR="$HOME/.local/bin"
 
 # Detect OS and Arch
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -27,7 +29,7 @@ else
     exit 1
 fi
 
-ASSET_NAME="${BINARY_NAME}-${OS}-${ARCH}"
+ASSET_NAME="${BINARY_NAME}-${OS}-${ARCH}.tar.gz"
 
 echo "Detected platform: $OS-$ARCH"
 echo "Fetching latest version..."
@@ -47,19 +49,36 @@ echo "Latest version: $TAG_NAME"
 DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep "browser_download_url" | grep "$ASSET_NAME" | cut -d '"' -f 4)
 
 if [ -z "$DOWNLOAD_URL" ]; then
-    echo "Error: Could not find binary for $ASSET_NAME in release $TAG_NAME."
+    echo "Error: Could not find package for $ASSET_NAME in release $TAG_NAME."
     exit 1
 fi
 
+# Download
+TMP_FILE="/tmp/${ASSET_NAME}"
 echo "Downloading $DOWNLOAD_URL..."
-curl -L -o "$BINARY_NAME" "$DOWNLOAD_URL"
-chmod +x "$BINARY_NAME"
+curl -L -o "$TMP_FILE" "$DOWNLOAD_URL"
 
+# Install
 echo "Installing to $INSTALL_DIR..."
-if [ -w "$INSTALL_DIR" ]; then
-    mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
-else
-    sudo mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+mkdir -p "$INSTALL_ROOT"
+mkdir -p "$BIN_DIR"
+
+if [ -d "$INSTALL_DIR" ]; then
+    rm -rf "$INSTALL_DIR"
+fi
+
+tar -xzf "$TMP_FILE" -C "$INSTALL_ROOT"
+rm "$TMP_FILE"
+
+# Symlink
+echo "Creating symlink in $BIN_DIR..."
+ln -sf "$INSTALL_DIR/$BINARY_NAME" "$BIN_DIR/$BINARY_NAME"
+
+# Check PATH
+if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
+    echo "⚠️  Warning: $BIN_DIR is not in your PATH."
+    echo "Add the following line to your shell configuration (.zshrc, .bashrc):"
+    echo "export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
 echo "Successfully installed $BINARY_NAME $TAG_NAME!"

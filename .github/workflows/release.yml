@@ -57,12 +57,14 @@ jobs:
         VERSION=$(grep "__version__" src/uatiari/version.py | cut -d '"' -f 2)
         echo "VERSION=v$VERSION" >> $GITHUB_ENV
 
-    - name: Rename binary (Unix)
-      run: mv dist/uatiari dist/${{ matrix.asset_name }}
+    - name: Compress binary
+      run: |
+        cd dist
+        tar -czf ${{ matrix.asset_name }}.tar.gz uatiari
 
     - name: Upload binaries to Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
       with:
-        files: dist/${{ matrix.asset_name }}
+        files: dist/${{ matrix.asset_name }}.tar.gz
         tag_name: ${{ env.VERSION }}

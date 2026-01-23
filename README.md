@@ -34,23 +34,21 @@ Python 3.11+  |  Git  |  Google Gemini API Key
 
 ### Installation
 
-#### Global Installation (Recommended)
+#### Standard Installation (Recommended)
 
-To use `uatiari` from any repository on your system, install it globally using `pipx`:
+Install the standalone binary (no Python required) using our installer script:
 
 ```bash
-# Install from local directory
-pipx install .
-
-# Or install directly from git
-# pipx install git+https://github.com/your-repo/uatiari.git
+curl -fsSL https://raw.githubusercontent.com/fernandoguedes/uatiari/main/install.sh | bash
 ```
+
+This will install `uatiari` to `~/.local/bin`.
 
 #### Development Installation
 
 ```bash
 # Clone and setup
-git clone <repository-url>
+git clone https://github.com/fernandoguedes/uatiari.git
 cd uatiari
 poetry install
 ```
@@ -77,10 +75,18 @@ echo "GOOGLE_API_KEY=your-key-here" > ~/.config/uatiari/.env
 
 ```bash
 # Review a feature branch
-poetry run uatiari feature/user-authentication
+uatiari feature/user-authentication
 
 # Compare against a different base
-poetry run uatiari feature/new-api --base=develop
+uatiari feature/new-api --base=develop
+```
+
+### Updating
+
+Update to the latest version directly from the CLI:
+
+```bash
+uatiari update
 ```
 
 ---
@@ -88,7 +94,7 @@ poetry run uatiari feature/new-api --base=develop
 ## 📊 Example Session
 
 ```bash
-$ poetry run uatiari feature/payment-validation
+$ uatiari feature/payment-validation
 ```
 
 ```

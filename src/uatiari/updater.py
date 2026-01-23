@@ -105,42 +105,85 @@ def update_cli():
 
     # Determine asset name
     system, arch = get_system_arch()
-    asset_name_prefix = f"uatiari-{system}-{arch}"
+    asset_name_suffix = f"{system}-{arch}.tar.gz"
 
     asset = None
     for a in release.get("assets", []):
-        if a["name"].startswith(asset_name_prefix):
+        if a["name"].endswith(asset_name_suffix):
             asset = a
             break
 
     if not asset:
-        console.print(f"[red]No compatible binary found for {system}-{arch}.[/red]")
+        console.print(f"[red]No compatible update package found for {system}-{arch}.[/red]")
         return
 
     # Download and install
+    download_path = None
     try:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        import tarfile
+
+        with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp_file:
             download_path = Path(tmp_file.name)
 
         download_asset(asset["browser_download_url"], download_path)
 
-        # Verify executable
-        os.chmod(download_path, 0o755)
-
-        # Replace current binary
+        # Identify paths
         current_binary = Path(sys.executable)
+        install_dir = current_binary.parent
 
         # Safety check: are we running frozen?
         if not getattr(sys, "frozen", False):
             console.print(
                 "[yellow]Warning: Not running as a frozen binary. Update skipped.[/yellow]"
             )
-            console.print(f"Downloaded binary to: {download_path}")
+            console.print(f"Downloaded update to: {download_path}")
             return
 
-        # Move new binary into place
-        # On Unix we can overwrite running executable
-        shutil.move(str(download_path), str(current_binary))
+        with tempfile.TemporaryDirectory() as tmp_extract_dir:
+            # Extract
+            console.print("Extracting update...")
+            with tarfile.open(download_path, "r:gz") as tar:
+                # Security: use filter='data' if available (Python 3.12+), otherwise be careful
+                if hasattr(tarfile.TarFile, 'extraction_filter'):
+                    tar.extractall(path=tmp_extract_dir, filter='data')
+                else:
+                    tar.extractall(path=tmp_extract_dir)
+
+            # The tar contains a folder named 'uatiari'
+            extracted_folder = Path(tmp_extract_dir) / "uatiari"
+            if not extracted_folder.exists():
+                raise Exception("Update package structure is invalid (missing 'uatiari' folder)")
+
+            # Prepare for swap
+            backup_dir = install_dir.parent / f"{install_dir.name}.bak"
+            if backup_dir.exists():
+                shutil.rmtree(backup_dir)
+
+            console.print("Installing update...")
+            
+            # Atomic-ish swap
+            # 1. Rename current to backup
+            shutil.move(str(install_dir), str(backup_dir))
+            
+            try:
+                # 2. Move new to current
+                shutil.move(str(extracted_folder), str(install_dir))
+                
+                # Restore execution permissions for the binary
+                new_binary = install_dir / "uatiari"
+                if new_binary.exists():
+                    os.chmod(new_binary, 0o755)
+                
+                # 3. Cleanup backup
+                shutil.rmtree(backup_dir)
+                
+            except Exception as e:
+                # Rollback
+                console.print(f"[red]Installation failed, rolling back... Error: {e}[/red]")
+                if install_dir.exists():
+                    shutil.rmtree(install_dir)
+                shutil.move(str(backup_dir), str(install_dir))
+                raise e
 
         console.print(
             f"\n[bold green]Successfully updated to {latest_version}![/bold green]"
@@ -149,5 +192,6 @@ def update_cli():
 
     except Exception as e:
         print_error(f"Update failed: {e}")
-        if "download_path" in locals() and download_path.exists():
+    finally:
+        if download_path and download_path.exists():
             os.unlink(download_path)
