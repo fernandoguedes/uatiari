@@ -14,6 +14,7 @@ class ReviewState(TypedDict):
     # Input parameters
     branch_name: str
     base_branch: str
+    manual_skill: Optional[str]  # e.g., 'laravel' or None
 
     # Git context
     diff_content: str
@@ -23,6 +24,9 @@ class ReviewState(TypedDict):
     # Review workflow
     review_plan: str
     user_approved: bool
+
+    # Skills
+    active_skills: list[str]  # List of skill names applied
 
     # Results
     review_result: dict

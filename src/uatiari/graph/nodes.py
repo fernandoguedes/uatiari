@@ -13,12 +13,14 @@ from uatiari.logger import (
     print_review_result,
     print_step,
 )
-from uatiari.prompts.xp_reviewer import PLAN_GENERATION_PROMPT, XP_SYSTEM_PROMPT
+from uatiari.prompts.xp_reviewer import PLAN_GENERATION_PROMPT
+from uatiari.skills_manager import SkillManager
 from uatiari.tools.git_tools import (
     GitError,
     get_changed_files,
     get_diff,
     get_diff_stats,
+    list_repository_files,
 )
 
 
@@ -132,9 +134,28 @@ def execute_review(state: ReviewState) -> ReviewState:
             model=LLM_MODEL, temperature=LLM_TEMPERATURE, google_api_key=GOOGLE_API_KEY
         )
 
+        # Initialize SkillManager
+        skill_manager = SkillManager()
+
+        # Get repository files for detection
+        try:
+            repo_files = list_repository_files()
+        except Exception:
+            # If we can't list files (e.g. error), assume empty list
+            # Detection will rely on changed files or manual override
+            repo_files = []
+
+        # Detect skills
+        active_skills = skill_manager.detect_skills(
+            state.get("manual_skill"), repo_files, state["changed_files"]
+        )
+
+        # Get enriched system prompt
+        system_prompt = skill_manager.get_system_prompt()
+
         # Create messages for the review
         messages = [
-            ("system", XP_SYSTEM_PROMPT),
+            ("system", system_prompt),
             ("human", f"Review this git diff:\n\n{state['diff_content']}"),
         ]
 
@@ -167,6 +188,11 @@ def execute_review(state: ReviewState) -> ReviewState:
                 "error": "Invalid JSON response from LLM",
                 "raw_response": response.content,
             }
+
+        # Metadata injection
+        metadata = skill_manager.get_metadata(state.get("manual_skill"))
+        if metadata:
+            review_result["metadata"] = metadata
 
         # Inject deterministic test analysis
         try:
@@ -212,7 +238,12 @@ def execute_review(state: ReviewState) -> ReviewState:
             # Don't fail the whole review if stats fail
             print_error(f"Failed to calculate test stats: {e}")
 
-        return {**state, "review_result": review_result, "error": None}
+        return {
+            **state,
+            "review_result": review_result,
+            "active_skills": [s.name for s in active_skills],
+            "error": None,
+        }
     except Exception as e:
         print_error(f"Failed to execute review: {e}")
         return {**state, "error": f"Failed to execute review: {e}"}

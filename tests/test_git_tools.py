@@ -145,3 +145,31 @@ class TestGetChangedFiles:
 
         with pytest.raises(GitError, match="Not in a git repository"):
             get_changed_files("feature", "main")
+
+
+class TestListRepositoryFiles:
+    """Tests for list_repository_files function."""
+
+    @patch("subprocess.run")
+    def test_successful_list(self, mock_run):
+        """Test successful retrieval of all files."""
+        from uatiari.tools.git_tools import list_repository_files
+
+        mock_run.side_effect = [
+            MagicMock(returncode=0),  # git rev-parse check
+            MagicMock(stdout="file1.py\nsrc/main.py\nREADME.md\n", returncode=0),
+        ]
+
+        result = list_repository_files()
+
+        assert result == ["file1.py", "src/main.py", "README.md"]
+
+    @patch("subprocess.run")
+    def test_not_in_git_repo(self, mock_run):
+        """Test error when not in a git repository."""
+        from uatiari.tools.git_tools import list_repository_files
+
+        mock_run.side_effect = subprocess.CalledProcessError(1, "git")
+
+        with pytest.raises(GitError, match="Not in a git repository"):
+            list_repository_files()
