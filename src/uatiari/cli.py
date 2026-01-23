@@ -1,7 +1,6 @@
 """CLI entry point for uatiari code review agent."""
 import sys
 
-from uatiari.graph.workflow import create_workflow
 from uatiari.logger import console, print_error, print_header
 from uatiari.updater import update_cli
 from uatiari.version import __version__
@@ -20,7 +19,6 @@ def print_help():
 [bold]USAGE:[/bold]
   [cyan]uatiari[/cyan] <branch-name> [options]
 
-[bold]ARGUMENTS:[/bold]
 [bold]ARGUMENTS:[/bold]
   [yellow]<branch-name>[/yellow]    Branch to review against base (required)
 
@@ -55,7 +53,7 @@ def print_help():
   • [green]Refactoring[/green] - Suggests small, safe improvements
   • [green]YAGNI[/green] - Identifies premature optimization
 
-[dim]For more info: https://github.com/your-repo/uatiari[/dim]
+[dim]For more info: https://github.com/fernandoguedes/uatiari[/dim]
 """
     console.print(help_text)
 
@@ -106,6 +104,7 @@ def main():
 
     # Create workflow
     try:
+        from uatiari.graph.workflow import create_workflow
         workflow = create_workflow()
     except Exception as e:
         print_error(f"Failed to initialize workflow: {e}")
