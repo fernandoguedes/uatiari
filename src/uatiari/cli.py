@@ -105,6 +105,7 @@ def main():
     # Create workflow
     try:
         from uatiari.graph.workflow import create_workflow
+
         workflow = create_workflow()
     except Exception as e:
         print_error(f"Failed to initialize workflow: {e}")
