@@ -1,31 +1,36 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Get system info
-OS_TYPE=$(uname -s | tr '[:upper:]' '[:lower:]')
-ARCH=$(uname -m)
+OS_TYPE="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m)"
 
-if [ "$OS_TYPE" == "darwin" ]; then
+if [ "$OS_TYPE" = "darwin" ]; then
     OS_TYPE="macos"
+elif [ "$OS_TYPE" != "linux" ]; then
+    echo "Unsupported OS: $OS_TYPE"
+    exit 1
 fi
 
-if [ "$ARCH" == "x86_64" ]; then
+if [ "$ARCH" = "x86_64" ]; then
     ARCH="x64"
-elif [ "$ARCH" == "aarch64" ] || [ "$ARCH" == "arm64" ]; then
+elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
     ARCH="arm64"
+else
+    echo "Unsupported architecture: $ARCH"
+    exit 1
 fi
 
-# Build
-echo "Building uatiari..."
-pyinstaller build.spec --noconfirm --clean
-
-# Package
-DIST_DIR="dist/uatiari"
 PACKAGE_NAME="uatiari-${OS_TYPE}-${ARCH}.tar.gz"
 
-echo "Packaging ${PACKAGE_NAME}..."
-cd dist
-tar -czf "../${PACKAGE_NAME}" uatiari/
-cd ..
+echo "Building uatiari..."
+rm -rf dist
+mkdir -p dist/uatiari
+go build -trimpath -ldflags="-s -w" -o dist/uatiari/uatiari ./cmd/uatiari
 
-echo "✓ Package created at ${PACKAGE_NAME}"
+echo "Packaging ${PACKAGE_NAME}..."
+(
+    cd dist
+    tar -czf "../${PACKAGE_NAME}" uatiari
+)
+
+echo "Package created at ${PACKAGE_NAME}"
