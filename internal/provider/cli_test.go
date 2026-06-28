@@ -18,3 +18,16 @@ func TestCodexAdapterKeepsPromptSentinelLast(t *testing.T) {
 		}
 	}
 }
+
+func TestCodexAdapterUsesSupportedExecFlags(t *testing.T) {
+	cli, err := NewCLI("codex")
+	if err != nil {
+		t.Fatalf("NewCLI returned error: %v", err)
+	}
+
+	for _, arg := range cli.Args {
+		if arg == "--ask-for-approval" {
+			t.Fatalf("codex args contain unsupported approval flag: %#v", cli.Args)
+		}
+	}
+}

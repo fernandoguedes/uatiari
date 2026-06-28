@@ -28,7 +28,7 @@ func NewCLI(name string) (CLIProvider, error) {
 	case "antigravity":
 		return CLIProvider{Name: name, Command: "agy", Args: []string{}}, nil
 	case "codex":
-		return CLIProvider{Name: name, Command: "codex", Args: []string{"exec", "--sandbox", "read-only", "--ask-for-approval", "never", "--color", "never"}}, nil
+		return CLIProvider{Name: name, Command: "codex", Args: []string{"exec", "--sandbox", "read-only", "--color", "never"}}, nil
 	default:
 		return CLIProvider{}, fmt.Errorf("provider %q is not supported", name)
 	}
