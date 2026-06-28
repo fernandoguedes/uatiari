@@ -240,9 +240,72 @@ func pretty(result Result) string {
 	if result.Overall.Reason != "" {
 		b.WriteString(fmt.Sprintf("Reason: %s\n", result.Overall.Reason))
 	}
-	b.WriteString(fmt.Sprintf("\nBlocking: %d\nWarnings: %d\nSuggestions: %d\n", len(result.BlockingIssues), len(result.Warnings), len(result.Suggestions)))
+	writeBlockingIssues(&b, result.BlockingIssues)
+	writeWarnings(&b, result.Warnings)
+	writeSuggestions(&b, result.Suggestions)
 	if result.TestAnalysis.Verdict != "" {
 		b.WriteString(fmt.Sprintf("\nTests: %s (prod=%d test=%d ratio=%.2f)\n", result.TestAnalysis.Verdict, result.TestAnalysis.ProductionLines, result.TestAnalysis.TestLines, result.TestAnalysis.Ratio))
 	}
 	return b.String()
+}
+
+func writeBlockingIssues(b *strings.Builder, issues []Issue) {
+	if len(issues) == 0 {
+		b.WriteString("\nBlocking Issues: none\n")
+		return
+	}
+	b.WriteString("\nBlocking Issues:\n")
+	for i, item := range issues {
+		b.WriteString(fmt.Sprintf("%d. %s\n", i+1, location(item.File, item.Lines)))
+		writeField(b, "Category", item.Category)
+		writeField(b, "Issue", item.Issue)
+		writeField(b, "Action", item.Action)
+		writeField(b, "Why blocking", item.WhyBlocking)
+	}
+}
+
+func writeWarnings(b *strings.Builder, warnings []Warning) {
+	if len(warnings) == 0 {
+		b.WriteString("\nWarnings: none\n")
+		return
+	}
+	b.WriteString("\nWarnings:\n")
+	for i, item := range warnings {
+		b.WriteString(fmt.Sprintf("%d. %s\n", i+1, location(item.File, item.Lines)))
+		writeField(b, "Category", item.Category)
+		writeField(b, "Issue", item.Issue)
+		writeField(b, "Suggestion", item.Suggestion)
+		writeField(b, "Effort", item.Effort)
+		writeField(b, "XP principle", item.XPPrinciple)
+	}
+}
+
+func writeSuggestions(b *strings.Builder, suggestions []Suggestion) {
+	if len(suggestions) == 0 {
+		b.WriteString("\nSuggestions: none\n")
+		return
+	}
+	b.WriteString("\nSuggestions:\n")
+	for i, item := range suggestions {
+		b.WriteString(fmt.Sprintf("%d. %s\n", i+1, location(item.File, item.Lines)))
+		writeField(b, "Improvement", item.Improvement)
+		writeField(b, "Benefit", item.Benefit)
+	}
+}
+
+func location(file, lines string) string {
+	if file == "" {
+		return "(no file)"
+	}
+	if lines == "" {
+		return file
+	}
+	return file + ":" + lines
+}
+
+func writeField(b *strings.Builder, label, value string) {
+	if value == "" {
+		return
+	}
+	b.WriteString(fmt.Sprintf("   %s: %s\n", label, value))
 }

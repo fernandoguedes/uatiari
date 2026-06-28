@@ -89,3 +89,60 @@ func TestRenderJSONIsValid(t *testing.T) {
 		t.Fatalf("json output is invalid: %v\n%s", err, out)
 	}
 }
+
+func TestRenderPrettyIncludesActionableDetails(t *testing.T) {
+	result := Result{
+		Overall: Overall{
+			Verdict: "REQUEST_CHANGES",
+			Reason:  "needs provider contract fix",
+		},
+		BlockingIssues: []Issue{{
+			File:     "internal/provider/cli.go",
+			Lines:    "28",
+			Category: "CONTRACT",
+			Issue:    "Codex adapter uses an unsupported flag",
+			Action:   "Remove --ask-for-approval from codex exec args",
+		}},
+		Warnings: []Warning{{
+			File:       "internal/app/app.go",
+			Lines:      "82-90",
+			Category:   "VALIDATION",
+			Issue:      "Provider auth is only checked after approval",
+			Suggestion: "Validate provider readiness before asking for execution approval",
+			Effort:     "20min",
+		}},
+		Suggestions: []Suggestion{{
+			File:        "README.md",
+			Lines:       "31-45",
+			Improvement: "Document provider authentication requirements",
+			Benefit:     "Users can configure their CLI before running a review",
+		}},
+		TestAnalysis: TestAnalysis{
+			Verdict:         "ACCEPTABLE",
+			ProductionLines: 10,
+			TestLines:       4,
+			Ratio:           0.4,
+		},
+	}
+
+	out, err := Render(result, "pretty")
+	if err != nil {
+		t.Fatalf("Render returned error: %v", err)
+	}
+
+	for _, want := range []string{
+		"Blocking Issues:",
+		"internal/provider/cli.go:28",
+		"Category: CONTRACT",
+		"Action: Remove --ask-for-approval from codex exec args",
+		"Warnings:",
+		"Suggestion: Validate provider readiness before asking for execution approval",
+		"Effort: 20min",
+		"Suggestions:",
+		"Benefit: Users can configure their CLI before running a review",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("pretty output missing %q:\n%s", want, out)
+		}
+	}
+}
