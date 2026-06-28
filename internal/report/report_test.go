@@ -92,7 +92,7 @@ func TestRenderJSONIsValid(t *testing.T) {
 
 func TestEnsureMarkdownEnglish(t *testing.T) {
 	result := Result{
-		Overall: Overall{Verdict: "APPROVE", Reason: "all good"},
+		Overall:        Overall{Verdict: "APPROVE", Reason: "all good"},
 		BlockingIssues: []Issue{{File: "foo.go", Lines: "1", Issue: "X", Action: "Do Y"}},
 		Warnings:       []Warning{{File: "bar.go", Lines: "2", Issue: "W", Suggestion: "S", Effort: "5min"}},
 		Suggestions:    []Suggestion{{File: "baz.go", Lines: "3", Improvement: "I", Benefit: "B"}},
@@ -119,7 +119,7 @@ func TestEnsureMarkdownSetsDefaultVerdict(t *testing.T) {
 
 func TestRenderMarkdownContainsSummary(t *testing.T) {
 	result := Result{
-		Overall:        Overall{Verdict: "APPROVE", Reason: "ok"},
+		Overall:         Overall{Verdict: "APPROVE", Reason: "ok"},
 		SummaryMarkdown: "## Revisão XP\n\n**Veredito:** APPROVE\n\nok",
 		Comments: Comments{
 			Blocking:    []string{"block comment"},
