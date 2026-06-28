@@ -1,5 +1,9 @@
 # uatiari 🎯
 
+[![CI](https://github.com/fernandoguedes/uatiari/actions/workflows/ci.yml/badge.svg)](https://github.com/fernandoguedes/uatiari/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/fernandoguedes/uatiari/graph/badge.svg)](https://codecov.io/gh/fernandoguedes/uatiari)
+![AST Metrics](https://img.shields.io/badge/ast_metrics-80_lines_%7C_20_branches-blue)
+
 > **uatiari** (Nheengatu: *to guide*) — An intelligent code review agent that guides developers toward better code quality through eXtreme Programming principles.
 
 ---

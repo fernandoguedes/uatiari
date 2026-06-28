@@ -90,6 +90,132 @@ func TestRenderJSONIsValid(t *testing.T) {
 	}
 }
 
+func TestEnsureMarkdownEnglish(t *testing.T) {
+	result := Result{
+		Overall: Overall{Verdict: "APPROVE", Reason: "all good"},
+		BlockingIssues: []Issue{{File: "foo.go", Lines: "1", Issue: "X", Action: "Do Y"}},
+		Warnings:       []Warning{{File: "bar.go", Lines: "2", Issue: "W", Suggestion: "S", Effort: "5min"}},
+		Suggestions:    []Suggestion{{File: "baz.go", Lines: "3", Improvement: "I", Benefit: "B"}},
+	}
+	EnsureMarkdown(&result, "en_US")
+	if !strings.Contains(result.SummaryMarkdown, "XP Review") {
+		t.Fatalf("en_US summary missing 'XP Review': %q", result.SummaryMarkdown)
+	}
+	if len(result.Comments.Warnings) != 1 || !strings.Contains(result.Comments.Warnings[0], "Warning") {
+		t.Fatalf("en_US warning comment = %q", result.Comments.Warnings)
+	}
+	if len(result.Comments.Suggestions) != 1 || !strings.Contains(result.Comments.Suggestions[0], "Suggestion") {
+		t.Fatalf("en_US suggestion comment = %q", result.Comments.Suggestions)
+	}
+}
+
+func TestEnsureMarkdownSetsDefaultVerdict(t *testing.T) {
+	result := Result{}
+	EnsureMarkdown(&result, "pt_BR")
+	if result.Overall.Verdict != "UNKNOWN" {
+		t.Fatalf("verdict = %q, want UNKNOWN", result.Overall.Verdict)
+	}
+}
+
+func TestRenderMarkdownContainsSummary(t *testing.T) {
+	result := Result{
+		Overall:        Overall{Verdict: "APPROVE", Reason: "ok"},
+		SummaryMarkdown: "## Revisão XP\n\n**Veredito:** APPROVE\n\nok",
+		Comments: Comments{
+			Blocking:    []string{"block comment"},
+			Warnings:    []string{"warning comment"},
+			Suggestions: []string{"suggestion comment"},
+		},
+	}
+	out, err := Render(result, "markdown")
+	if err != nil {
+		t.Fatalf("Render markdown error: %v", err)
+	}
+	for _, want := range []string{"Revisão XP", "block comment", "warning comment", "suggestion comment"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("markdown output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestRenderUnsupportedFormatReturnsError(t *testing.T) {
+	_, err := Render(Result{}, "xml")
+	if err == nil {
+		t.Fatal("expected error for unsupported format, got nil")
+	}
+}
+
+func TestRenderDefaultFormatIsJSON(t *testing.T) {
+	out, err := Render(Result{Overall: Overall{Verdict: "APPROVE"}}, "")
+	if err != nil {
+		t.Fatalf("Render '' error: %v", err)
+	}
+	if !strings.Contains(out, "APPROVE") {
+		t.Fatalf("default format output missing APPROVE: %q", out)
+	}
+}
+
+func TestEnsureMarkdownPtBRWarningsAndSuggestions(t *testing.T) {
+	result := Result{
+		Overall:     Overall{Verdict: "APPROVE"},
+		Warnings:    []Warning{{File: "a.go", Lines: "1", Issue: "W", Suggestion: "S", Effort: "5min"}},
+		Suggestions: []Suggestion{{File: "b.go", Lines: "2", Improvement: "I", Benefit: "B"}},
+	}
+	EnsureMarkdown(&result, "pt_BR")
+	if len(result.Comments.Warnings) != 1 || !strings.Contains(result.Comments.Warnings[0], "Atenção") {
+		t.Fatalf("pt_BR warning = %q, expected 'Atenção'", result.Comments.Warnings)
+	}
+	if len(result.Comments.Suggestions) != 1 || !strings.Contains(result.Comments.Suggestions[0], "Sugestão") {
+		t.Fatalf("pt_BR suggestion = %q, expected 'Sugestão'", result.Comments.Suggestions)
+	}
+}
+
+func TestParseExtractsRawBraces(t *testing.T) {
+	// extractJSON fallback: no ``` prefix, but valid JSON with surrounding text
+	input := `some text {"overall":{"verdict":"APPROVE","reason":"ok","confidence":"HIGH"}} more text`
+	result, err := Parse(input)
+	if err != nil {
+		t.Fatalf("Parse returned error: %v", err)
+	}
+	if result.Overall.Verdict != "APPROVE" {
+		t.Fatalf("verdict = %q, want APPROVE", result.Overall.Verdict)
+	}
+}
+
+func TestApplyTestAnalysisExcellentRatio(t *testing.T) {
+	stats := map[string]DiffStat{
+		"src/foo.go":      {Added: 5},
+		"src/foo_test.go": {Added: 6},
+	}
+	result := Result{}
+	ApplyTestAnalysis(&result, stats)
+	if result.TestAnalysis.Verdict != "EXCELLENT" {
+		t.Fatalf("verdict = %q, want EXCELLENT", result.TestAnalysis.Verdict)
+	}
+}
+
+func TestApplyTestAnalysisMissingTests(t *testing.T) {
+	stats := map[string]DiffStat{
+		"src/foo.go": {Added: 10},
+	}
+	result := Result{}
+	ApplyTestAnalysis(&result, stats)
+	if result.TestAnalysis.Verdict != "MISSING" {
+		t.Fatalf("verdict = %q, want MISSING", result.TestAnalysis.Verdict)
+	}
+}
+
+func TestPrettyWithNoIssues(t *testing.T) {
+	result := Result{Overall: Overall{Verdict: "APPROVE"}}
+	out, err := Render(result, "pretty")
+	if err != nil {
+		t.Fatalf("Render pretty error: %v", err)
+	}
+	if !strings.Contains(out, "none") {
+		t.Fatalf("pretty with no issues should show 'none': %q", out)
+	}
+}
+
 func TestRenderPrettyIncludesActionableDetails(t *testing.T) {
 	result := Result{
 		Overall: Overall{
