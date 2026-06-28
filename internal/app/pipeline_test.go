@@ -9,7 +9,7 @@ import (
 func TestCIWorkflowUsesGoToolchain(t *testing.T) {
 	content := readWorkflow(t, "../../.github/workflows/ci.yml")
 
-	for _, expected := range []string{"actions/setup-go@v5", "go test ./...", "go vet ./...", "gofmt -l ."} {
+	for _, expected := range []string{"actions/setup-go@v5", "./scripts/quality-gates.sh", "go vet ./...", "gofmt -l ."} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("ci workflow missing %q", expected)
 		}
@@ -24,7 +24,17 @@ func TestCIWorkflowUsesGoToolchain(t *testing.T) {
 func TestReleaseWorkflowBuildsGoAssets(t *testing.T) {
 	content := readWorkflow(t, "../../.github/workflows/release.yml")
 
-	for _, expected := range []string{"actions/setup-go@v5", "go build", "uatiari-linux-x64", "uatiari-macos-x64", "uatiari-macos-arm64"} {
+	for _, expected := range []string{
+		"actions/setup-go@v5",
+		"pull_request:",
+		"branches: [main]",
+		"quality-gates:",
+		"./scripts/quality-gates.sh",
+		"go build",
+		"uatiari-linux-x64",
+		"uatiari-macos-x64",
+		"uatiari-macos-arm64",
+	} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("release workflow missing %q", expected)
 		}
