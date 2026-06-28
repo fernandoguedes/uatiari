@@ -1,31 +1,18 @@
 # Environment variables
 .env
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# Go
+bin/
+coverage.out
 
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Build artifacts
+dist/
+build/
+/uatiari
+uatiari-*.tar.gz
 
 # IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Poetry
-poetry.lock
-dist/
-build/

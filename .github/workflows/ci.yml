@@ -2,42 +2,32 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11"]
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
+      - uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: poetry install --no-interaction --no-root
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
-    - name: Install project
-      run: poetry install --no-interaction
+      - name: Check formatting
+        run: |
+          test -z "$(gofmt -l .)"
 
-    - name: Check code formatting with Black
-      run: poetry run black --check .
+      - name: Run go vet
+        run: go vet ./...
 
-    - name: Check code quality with Ruff
-      run: poetry run ruff check .
+      - name: Run tests
+        run: go test ./...
 
-    - name: Run tests with Pytest
-      run: poetry run pytest
+      - name: Run race tests
+        run: go test -race ./...
