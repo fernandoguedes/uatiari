@@ -31,7 +31,7 @@ Just as a guide leads travelers through complex terrain, **uatiari** guides deve
 ### Prerequisites
 
 ```bash
-Go 1.26.4+  |  Git  |  At least one supported AI CLI
+Go 1.26+  |  Git  |  At least one supported AI CLI
 ```
 
 Supported providers:

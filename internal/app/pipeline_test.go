@@ -36,6 +36,17 @@ func TestReleaseWorkflowBuildsGoAssets(t *testing.T) {
 	}
 }
 
+func TestGoModSeparatesLanguageAndToolchainVersions(t *testing.T) {
+	content := readWorkflow(t, "../../go.mod")
+
+	if !strings.Contains(content, "\ngo 1.26\n") {
+		t.Fatalf("go.mod should declare language version go 1.26:\n%s", content)
+	}
+	if !strings.Contains(content, "\ntoolchain go1.26.4\n") {
+		t.Fatalf("go.mod should pin toolchain go1.26.4:\n%s", content)
+	}
+}
+
 func readWorkflow(t *testing.T, path string) string {
 	t.Helper()
 	bytes, err := os.ReadFile(path)

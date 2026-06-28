@@ -11,7 +11,7 @@ This repository contains a Go CLI application for reviewing git branches with lo
 - `go run ./cmd/uatiari <branch> --provider=codex`: runs the CLI directly from source.
 - `./scripts/package.sh`: builds a trimmed release binary and packages it as `uatiari-<os>-<arch>.tar.gz`.
 
-The project targets Go `1.26.4` as declared in `go.mod`.
+The project targets Go `1.26` with the `go1.26.4` toolchain as declared in `go.mod`.
 
 ## Coding Style & Naming Conventions
 

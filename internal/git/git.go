@@ -118,7 +118,7 @@ func (c Client) validateBranch(ctx context.Context, branch, label string) error 
 	if branch == "" {
 		return Error{Message: label + " is required."}
 	}
-	_, err := c.run(ctx, "rev-parse", "--verify", branch)
+	_, err := c.run(ctx, "rev-parse", "--verify", "--", branch)
 	if err != nil {
 		return Error{Message: fmt.Sprintf("%s %q does not exist.", label, branch)}
 	}

@@ -49,6 +49,19 @@ func (a App) Run(ctx context.Context, args []string) int {
 		return 1
 	}
 
+	switch opts.Command {
+	case "help":
+		printHelp(a.Stdout)
+		return 0
+	case "version":
+		fmt.Fprintf(a.Stdout, "uatiari version %s\n", version.Version)
+		return 0
+	case "providers-doctor":
+		return a.runDoctor()
+	case "update":
+		return a.update(ctx)
+	}
+
 	cfgPath, err := config.DefaultPath()
 	if err != nil {
 		fmt.Fprintf(a.Stderr, "Error: %v\n", err)
@@ -61,18 +74,8 @@ func (a App) Run(ctx context.Context, args []string) int {
 	}
 
 	switch opts.Command {
-	case "help":
-		printHelp(a.Stdout)
-		return 0
-	case "version":
-		fmt.Fprintf(a.Stdout, "uatiari version %s\n", version.Version)
-		return 0
-	case "providers-doctor":
-		return a.runDoctor()
 	case "config-set-provider":
 		return a.setProvider(cfgPath, cfg, opts.ConfigProvider)
-	case "update":
-		return a.update(ctx)
 	default:
 		return a.review(ctx, opts, cfg)
 	}
