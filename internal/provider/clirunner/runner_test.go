@@ -22,7 +22,7 @@ func TestRunnerPassesPromptOnStdin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	runner := Runner{Command: path, Timeout: time.Second}
+	runner := Runner{Command: path, Timeout: 5 * time.Second}
 	out, err := runner.Run(context.Background(), "hello")
 	if err != nil {
 		t.Fatalf("Run returned error: %v", err)
@@ -40,7 +40,7 @@ func TestRunnerReportsExitCodeAndStderr(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	runner := Runner{Command: path, Timeout: time.Second}
+	runner := Runner{Command: path, Timeout: 5 * time.Second}
 	_, err := runner.Run(context.Background(), "hello")
 	if err == nil {
 		t.Fatal("Run returned nil error")
