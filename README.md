@@ -356,3 +356,9 @@ scripts/package.sh
 ```
 
 The CI pipeline runs the same Go checks and no longer depends on Python, Poetry, Ruff, Black, Pytest, or PyInstaller.
+
+---
+
+## 📄 License
+
+Released under the [MIT License](LICENSE).
