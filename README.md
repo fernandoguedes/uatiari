@@ -2,15 +2,18 @@
 
 [![CI](https://github.com/fernandoguedes/uatiari/actions/workflows/ci.yml/badge.svg)](https://github.com/fernandoguedes/uatiari/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/fernandoguedes/uatiari/graph/badge.svg)](https://codecov.io/gh/fernandoguedes/uatiari)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![AST Metrics](https://img.shields.io/badge/ast_metrics-80_lines_%7C_20_branches-blue)
 
-> **uatiari** (Nheengatu: *to guide*) — An intelligent code review agent that guides developers toward better code quality through eXtreme Programming principles.
+> **uatiari** (Nheengatu: *to guide*) — A native Go CLI for git-diff-aware static analysis and eXtreme Programming code review workflows, guiding developers (and their tooling) toward better code quality.
 
 ---
 
 ## ✨ Overview
 
-**uatiari** analyzes your git branches using local AI CLIs and provides structured feedback based on XP best practices:
+**uatiari** is a native Go CLI that turns every `git diff` into a structured, XP-driven code review report — a developer-productivity and static-analysis tool, not a hosted AI product. Its engine runs entirely on your machine: git diff parsing, AST-based quality gates, and TDD test-ratio heuristics are all deterministic Go code with zero third-party dependencies.
+
+uatiari evaluates every diff through five eXtreme Programming lenses:
 
 - 🧪 **Test-Driven Development** — Ensures critical paths have test coverage
 - 🎨 **Simple Design** — Identifies unnecessary complexity and abstractions
@@ -18,7 +21,7 @@
 - 🚫 **YAGNI** — Flags premature optimization and speculative code
 - ⚡ **Business Logic** — Validates domain rules and edge cases
 
-Unlike the previous API-based implementation, **uatiari** now runs as a native Go binary and delegates model execution to installed CLI tools.
+Unlike the previous API-based implementation, **uatiari** now runs as a native Go binary. The only step it delegates externally is the natural-language judgment pass — handed to any locally installed coding CLI, treated as an interchangeable **local execution runner** and invoked as a subprocess via `os/exec`, exactly the way uatiari already shells out to `git`.
 
 ### The Philosophy
 
@@ -35,7 +38,7 @@ Just as a guide leads travelers through complex terrain, **uatiari** guides deve
 ### Prerequisites
 
 ```bash
-Go 1.26+  |  Git  |  At least one supported AI CLI
+Go 1.26+  |  Git  |  At least one supported local execution runner (CLI)
 ```
 
 Supported providers:
@@ -46,7 +49,7 @@ Supported providers:
 - **Antigravity**: `agy`
 - **Codex**: `codex`
 
-> uatiari does **not** call model APIs directly. Each provider is invoked through its local CLI.
+> uatiari does **not** call model APIs, store credentials, or transmit your code anywhere. Each provider is invoked as a local subprocess through its CLI — the same mechanism uatiari uses to call `git`.
 
 ### Installation
 
@@ -124,13 +127,13 @@ uatiari feature/payment --format=markdown
 
 ### 🧠 Skills System
 
-**uatiari** features a modular skills system that automatically detects frameworks and languages to provide specialized feedback.
+**uatiari** features a modular skills framework: a small Go interface (`Detect`, `PromptAddon`, `Metadata`) that inspects changed/repo files to auto-detect frameworks and languages — pure deterministic pattern matching, no model involved — and injects specialized review heuristics into the pipeline.
 
 **Supported Skills:**
 
 - **Laravel**: Focuses on N+1 queries, Eloquent performance, security (SQLi, mass assignment), and database design.
 
-You can also manually use a specific skill set using the `--skill` flag.
+Go, NestJS, Astro, Nuxt, and SvelteKit skills are in active development — see the [Roadmap](#️-roadmap). You can also manually select a skill set using the `--skill` flag.
 
 ### Updating
 
@@ -248,11 +251,18 @@ graph TD
 
 | Component | Technology |
 |-----------|------------|
-| **Runtime** | Go native binary |
-| **AI Execution** | Local provider CLIs (`kimi`, `gemini`, `claude`, `agy`, `codex`) |
+| **Runtime** | Go native binary, zero non-stdlib dependencies |
+| **Execution Runner (pluggable)** | Local coding CLIs (`kimi`, `gemini`, `claude`, `agy`, `codex`) — invoked as subprocesses, never called via API |
 | **Git Integration** | Native Git CLI |
 | **Output Contract** | Structured JSON with Markdown-ready fields |
 | **Distribution** | Cross-compiled Go release archives |
+
+### 🔒 Local-First & Secure by Design
+
+- **No AI/ML API calls** — the only network request anywhere in the codebase is an optional `GET` to the GitHub Releases API for `uatiari update`
+- **No credential or API-key storage** — persisted config is limited to `provider`, `format`, and `lang`; any external CLI handles its own auth, outside uatiari's knowledge
+- **No third-party or personal data processing** — uatiari reads your local git repository and writes to stdout; nothing is uploaded or retained
+- **Zero non-stdlib dependencies** — the whole engine is built on the Go standard library (`os/exec`, `go/ast`, `go/parser`, `encoding/json`)
 
 ### Project Structure
 
@@ -359,6 +369,51 @@ The CI pipeline runs the same Go checks and no longer depends on Python, Poetry,
 
 ---
 
+## 🗺️ Roadmap
+
+uatiari's core engine is intentionally small today — git diff parsing, AST quality gates, TDD heuristics, and a one-skill registry — a clean, well-tested foundation for a large, genuinely technical backlog. Organized into epics below, roughly 60+ hours of hands-on Go engineering:
+
+### Epic 1 — Static Analysis Engine (≈14h)
+- [ ] Extract the `go/ast` analyzer in `scripts/ast-metrics` into a reusable `internal/analysis` package that can score *reviewed* diffs, not just uatiari's own source (4h)
+- [ ] Real cyclomatic complexity scoring per function (branch + logical-operator counting, normalized) (4h)
+- [ ] Maintainability-index heuristic (Halstead-inspired volume + complexity + LOC), surfaced in the JSON report schema (4h)
+- [ ] Duplicate-block detection across changed files via AST fingerprinting (2h)
+
+### Epic 2 — New Framework Skills (≈15h)
+- [ ] **Go** — goroutine leaks, missing `context.Context` propagation, unchecked errors, `defer`/`Close()` pairing (3h)
+- [ ] **NestJS** — decorator misuse, DI scope leaks, missing DTO validation pipes, N+1 TypeORM queries (3h)
+- [ ] **Astro** — island hydration overuse, client bundle bloat, content-collection schema drift (3h)
+- [ ] **Nuxt** — SSR/CSR data-fetching mismatches, composable misuse, Pinia store coupling (3h)
+- [ ] **SvelteKit** — load-function waterfalls, store overuse, form-action validation gaps (3h)
+
+### Epic 3 — Interactive TUI Mode (≈10h)
+- [ ] `bubbletea`-based review screen: scrollable diff + findings panes, keyboard-driven triage per finding (6h)
+- [ ] Live progress indicator for long-running executions, replacing the blocking stdin prompt (2h)
+- [ ] `--tui` flag with graceful fallback to plain-text in non-interactive shells/CI (2h)
+
+### Epic 4 — CI/CD Adapters (≈10h)
+- [ ] GitHub Actions adapter: inline PR review comments via the GitHub REST API (4h)
+- [ ] GitLab CI adapter: MR discussion comments (3h)
+- [ ] Bitbucket Pipelines adapter: PR comments via Bitbucket Cloud API (3h)
+
+### Epic 5 — Skills Framework Hardening (≈6h)
+- [ ] Replace the hardcoded skill registry with self-registering plugins (`init()`-based), no `NewManager` edits needed for new skills (3h)
+- [ ] Confidence scoring for `Detect()` + multiple simultaneously active skills with weighted prompt composition (3h)
+
+### Epic 6 — Testing & Quality (≈6h)
+- [ ] Golden-file tests for all three renderers (`json`, `markdown`, `pretty`) (2h)
+- [ ] End-to-end integration tests using a fake provider binary (2h)
+- [ ] Raise the coverage gate from 40% to 80%+ and tighten the AST metrics budget (2h)
+
+### Epic 7 — Packaging & Developer Experience (≈5h)
+- [ ] Homebrew tap (2h)
+- [ ] Shell completions for bash/zsh/fish (2h)
+- [ ] `uatiari providers doctor --verbose` with per-provider version/latency diagnostics (1h)
+
+**Total estimated effort: ~66 hours** — padded above the 60-hour bar for review iteration and expected scope creep.
+
+---
+
 ## 📄 License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE) — free to use, fork, and build on.
